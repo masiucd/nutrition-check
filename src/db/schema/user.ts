@@ -1,10 +1,15 @@
-import { integer, pgTable, varchar } from "drizzle-orm/pg-core";
+import * as pg from "drizzle-orm/pg-core";
 
-export const user = pgTable("user", {
-	id: integer().primaryKey().generatedAlwaysAsIdentity(),
-	username: varchar({ length: 255 }).notNull().unique(),
-	email: varchar({ length: 255 }).notNull().unique(),
-	passwordHash: varchar("password_hash", { length: 512 }).notNull(),
-	// name: varchar({ length: 255 }).notNull(),
-	// age: integer().notNull(),
-});
+export const user = pg.pgTable(
+	"user",
+	{
+		id: pg.integer().primaryKey().generatedAlwaysAsIdentity(),
+		username: pg.varchar({ length: 255 }).notNull().unique(),
+		email: pg.varchar({ length: 255 }).notNull().unique(),
+		passwordHash: pg.varchar("password_hash", { length: 512 }).notNull(),
+	},
+	(e) => [
+		pg.uniqueIndex("username_idx").on(e.username),
+		pg.uniqueIndex("email_idx").on(e.email),
+	],
+);

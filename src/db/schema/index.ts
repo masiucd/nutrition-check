@@ -1,3 +1,4 @@
-export { gender } from "./gender";
-export { user } from "./user";
-export { userInfo } from "./user_info";
+export * from "./gender";
+export * from "./product";
+export * from "./user";
+export * from "./user_info";
