@@ -32,7 +32,7 @@ export const product = pg.pgTable(
 		id: pg.integer().primaryKey().generatedAlwaysAsIdentity(),
 		name: pg.varchar({ length: 255 }).notNull(),
 		description: pg.varchar({ length: 1024 }).notNull(),
-		price: pg.decimal("price", { precision: 10, scale: 2 }).notNull(),
+		price: pg.decimal("price", { precision: 10, scale: 2 }).notNull(), // e.g., 99.99
 		createdAt: pg.timestamp("created_at").defaultNow().notNull(),
 		updatedAt: pg.timestamp("updated_at").defaultNow().notNull(),
 	},

@@ -1,17 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
+import { eq } from "drizzle-orm";
 import { Heading } from "@/components/typography";
 import { Button } from "@/components/ui/button";
 import { db } from "@/db/connect";
-import { user } from "@/db/schema";
+import { product, productImage, user } from "@/db/schema";
 
 async function readUsers() {
 	const xs = await db
 		.select({
-			username: user.username,
-			email: user.email,
+			name: product.name,
+			description: product.description,
+			price: product.price,
+			image: productImage.url,
 		})
-		.from(user);
+		.from(product)
+		.innerJoin(productImage, eq(productImage.productId, product.id));
 	return xs;
 }
 
