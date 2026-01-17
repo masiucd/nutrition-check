@@ -13,3 +13,6 @@ count.txt
 todos.json
 
 /generated/prisma
+
+# Local Netlify folder
+.netlify
