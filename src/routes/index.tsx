@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
+import { Heading } from "@/components/typography";
+import { Button } from "@/components/ui/button";
 import { db } from "@/db/connect";
 import { user } from "@/db/schema";
 
@@ -25,11 +27,19 @@ export const Route = createFileRoute("/")({
 });
 
 function App() {
-	const todos = Route.useLoaderData();
-	console.log("🚀 ~ App ~ todos:", todos);
+	const users = Route.useLoaderData();
+
 	return (
-		<div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
-			<h1>Hello world</h1>
+		<div>
+			<Heading tag="h1">Sick fits</Heading>
+			<Button>Click me</Button>
+			<ul>
+				{users.map((user) => (
+					<li key={user.email}>
+						{user.username} - {user.email}
+					</li>
+				))}
+			</ul>
 		</div>
 	);
 }
