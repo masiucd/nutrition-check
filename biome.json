@@ -18,19 +18,44 @@
 	},
 	"formatter": {
 		"enabled": true,
-		"indentStyle": "tab"
+		"indentStyle": "tab",
+		"indentWidth": 2,
+		"lineWidth": 100,
+		"bracketSpacing": false
 	},
-	"assist": { "actions": { "source": { "organizeImports": "on" } } },
+	"assist": {"actions": {"source": {"organizeImports": "on"}}},
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true
+			"recommended": true,
+			"complexity": {"noForEach": "warn"},
+			"correctness": {
+				"noChildrenProp": "off",
+				"noEmptyPattern": "error",
+				"useExhaustiveDependencies": "error",
+				"useHookAtTopLevel": "error"
+			},
+			"style": {
+				"useConst": "off"
+			},
+			"nursery": {
+				"useSortedClasses": {
+					"level": "error",
+					"options": {
+						"attributes": ["classList"],
+						"functions": ["clsx", "cva", "tw", "tw.*"]
+					}
+				}
+			},
+			"a11y": "error"
 		}
 	},
 	"javascript": {
 		"formatter": {
-			"quoteStyle": "double"
+			"quoteStyle": "double",
+			"semicolons": "asNeeded",
+			"arrowParentheses": "asNeeded",
+			"bracketSpacing": false
 		}
 	}
 }
-
