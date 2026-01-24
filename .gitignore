@@ -16,3 +16,7 @@ todos.json
 
 # Local Netlify folder
 .netlify
+
+
+# Volume for database data
+db_data/
