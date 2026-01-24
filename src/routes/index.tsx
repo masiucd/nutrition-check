@@ -5,8 +5,8 @@ import {Heading, Text} from "@/components/typography"
 import {db} from "@/db/connect"
 import {product, productImage} from "@/db/schema"
 
-async function readUsers() {
-	let xs = await db
+async function readProducts() {
+	let products = await db
 		.select({
 			id: product.id,
 			name: product.name,
@@ -16,12 +16,12 @@ async function readUsers() {
 		})
 		.from(product)
 		.leftJoin(productImage, eq(productImage.productId, product.id))
-	return xs
+	return products
 }
 
 let getUsers = createServerFn({method: "GET"}).handler(async () => {
 	try {
-		return await readUsers()
+		return await readProducts()
 	} catch (error) {
 		console.error("Error fetching products:", error)
 		return []

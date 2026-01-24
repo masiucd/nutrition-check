@@ -1,7 +1,7 @@
-import { relations } from "drizzle-orm";
-import * as pg from "drizzle-orm/pg-core";
+import {relations} from "drizzle-orm"
+import * as pg from "drizzle-orm/pg-core"
 
-import { user } from "./user";
+import {user} from "./user"
 
 // ============================================================================
 // TABLES
@@ -30,14 +30,16 @@ export const product = pg.pgTable(
 	"product",
 	{
 		id: pg.integer().primaryKey().generatedAlwaysAsIdentity(),
-		name: pg.varchar({ length: 255 }).notNull(),
-		description: pg.varchar({ length: 1024 }).notNull(),
-		price: pg.decimal("price", { precision: 10, scale: 2 }).notNull(), // e.g., 99.99
+		name: pg.varchar({length: 255}).notNull(),
+		description: pg.varchar({length: 1024}).notNull(),
+		price: pg.decimal("price", {precision: 10, scale: 2}).notNull(), // e.g., 99.99
 		createdAt: pg.timestamp("created_at").defaultNow().notNull(),
 		updatedAt: pg.timestamp("updated_at").defaultNow().notNull(),
 	},
-	(entity) => [pg.uniqueIndex("product_name_idx").on(entity.name)],
-);
+	entity => [pg.uniqueIndex("product_name_idx").on(entity.name)],
+)
+
+export type Product = typeof product.$inferSelect
 
 /**
  * Product Status Table
@@ -60,10 +62,12 @@ export const productStatus = pg.pgTable("product_status", {
 		.integer("product_id")
 		.references(() => product.id)
 		.notNull(),
-	status: pg.varchar({ length: 50 }).notNull().unique(),
-	sku: pg.varchar({ length: 100 }).notNull().unique(),
+	status: pg.varchar({length: 50}).notNull().unique(),
+	sku: pg.varchar({length: 100}).notNull().unique(),
 	stock: pg.integer().notNull().default(0),
-});
+})
+
+export type ProductStatus = typeof productStatus.$inferSelect
 
 /**
  * Product Info Table
@@ -88,12 +92,14 @@ export const productInfo = pg.pgTable("product_info", {
 		.integer("product_id")
 		.references(() => product.id)
 		.notNull(),
-	weight: pg.decimal("weight", { precision: 10, scale: 2 }),
-	weightUnit: pg.varchar({ length: 20 }).default("kg"),
-	slug: pg.varchar({ length: 255 }).notNull().unique(),
-	metaTitle: pg.varchar({ length: 255 }),
-	metaDescription: pg.varchar({ length: 512 }),
-});
+	weight: pg.decimal("weight", {precision: 10, scale: 2}),
+	weightUnit: pg.varchar({length: 20}).default("kg"),
+	slug: pg.varchar({length: 255}).notNull().unique(),
+	metaTitle: pg.varchar({length: 255}),
+	metaDescription: pg.varchar({length: 512}),
+})
+
+export type ProductInfo = typeof productInfo.$inferSelect
 
 /**
  * Category Table
@@ -114,12 +120,14 @@ export const category = pg.pgTable(
 	"category",
 	{
 		id: pg.integer().primaryKey().generatedAlwaysAsIdentity(),
-		name: pg.varchar({ length: 255 }).notNull(),
-		slug: pg.varchar({ length: 255 }).unique().notNull(),
+		name: pg.varchar({length: 255}).notNull(),
+		slug: pg.varchar({length: 255}).unique().notNull(),
 		parentId: pg.integer(), // Self-referencing foreign key for nested categories
 	},
-	(entity) => [pg.index("category_name_idx").on(entity.name)],
-);
+	entity => [pg.index("category_name_idx").on(entity.name)],
+)
+
+export type Category = typeof category.$inferSelect
 
 /**
  * Product-Category Junction Table
@@ -148,10 +156,13 @@ export const productCategory = pg.pgTable(
 			.references(() => category.id)
 			.notNull(),
 	},
-	(t) => ({
-		pk: pg.primaryKey({ columns: [t.productId, t.categoryId] }),
-	}),
-);
+	// t => ({
+	// 	pk: pg.primaryKey({columns: [t.productId, t.categoryId]}),
+	// }),
+	t => [pg.primaryKey({columns: [t.productId, t.categoryId]})],
+)
+
+export type ProductCategory = typeof productCategory.$inferSelect
 
 /**
  * Product Image Table
@@ -174,10 +185,11 @@ export const productImage = pg.pgTable("product_image", {
 		.integer("product_id")
 		.references(() => product.id)
 		.notNull(),
-	url: pg.varchar({ length: 500 }).notNull(),
-	altText: pg.varchar({ length: 255 }),
+	url: pg.varchar({length: 500}).notNull(),
+	altText: pg.varchar({length: 255}),
 	position: pg.integer().default(0),
-});
+})
+export type ProductImage = typeof productImage.$inferSelect
 
 /**
  * Product Review Table
@@ -209,7 +221,8 @@ export const productReview = pg.pgTable("product_review", {
 	rating: pg.integer().notNull(),
 	comment: pg.text(),
 	createdAt: pg.timestamp().defaultNow().notNull(),
-});
+})
+export type ProductReview = typeof productReview.$inferSelect
 
 // ============================================================================
 // RELATIONS
@@ -223,28 +236,28 @@ export const productReview = pg.pgTable("product_review", {
  * - `status` (One-to-One): Links to productStatus for inventory info
  * - `info` (One-to-One): Links to productInfo for SEO and physical attributes
  */
-export const productRelations = relations(product, ({ one }) => ({
+export const productRelations = relations(product, ({one}) => ({
 	status: one(productStatus),
 	info: one(productInfo),
-}));
+}))
 
 /**
  * Product Status Relations
  * ------------------------
  * Inverse relation back to the parent product.
  */
-export const productStatusRelations = relations(productStatus, ({ one }) => ({
+export const productStatusRelations = relations(productStatus, ({one}) => ({
 	product: one(product),
-}));
+}))
 
 /**
  * Product Info Relations
  * ----------------------
  * Inverse relation back to the parent product.
  */
-export const productInfoRelations = relations(productInfo, ({ one }) => ({
+export const productInfoRelations = relations(productInfo, ({one}) => ({
 	product: one(product),
-}));
+}))
 
 /**
  * Category Relations
@@ -253,9 +266,9 @@ export const productInfoRelations = relations(productInfo, ({ one }) => ({
  *
  * - `products` (One-to-Many): All product-category associations for this category
  */
-export const categoryRelations = relations(category, ({ many }) => ({
+export const categoryRelations = relations(category, ({many}) => ({
 	products: many(productCategory),
-}));
+}))
 
 /**
  * Product-Category Junction Relations
@@ -265,13 +278,10 @@ export const categoryRelations = relations(category, ({ many }) => ({
  * - `product` (Many-to-One): The product in this association
  * - `category` (Many-to-One): The category in this association
  */
-export const productCategoryRelations = relations(
-	productCategory,
-	({ one }) => ({
-		product: one(product),
-		category: one(category),
-	}),
-);
+export const productCategoryRelations = relations(productCategory, ({one}) => ({
+	product: one(product),
+	category: one(category),
+}))
 
 /**
  * Product Image Relations
@@ -280,9 +290,9 @@ export const productCategoryRelations = relations(
  *
  * - `product` (Many-to-One): The product this image belongs to
  */
-export const productImageRelations = relations(productImage, ({ one }) => ({
+export const productImageRelations = relations(productImage, ({one}) => ({
 	product: one(product),
-}));
+}))
 
 /**
  * Product Review Relations
@@ -294,6 +304,6 @@ export const productImageRelations = relations(productImage, ({ one }) => ({
  * Note: User relation should be defined in the user schema file
  */
 
-export const productReviewRelations = relations(productReview, ({ one }) => ({
+export const productReviewRelations = relations(productReview, ({one}) => ({
 	product: one(product),
-}));
+}))
