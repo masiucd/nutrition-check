@@ -1,0 +1,109 @@
+{
+  // File watcher exclusions
+  "file_scan_exclusions": ["**/routeTree.gen.ts"],
+
+  // Search exclusions
+  "search": {
+    "exclude": ["**/routeTree.gen.ts"],
+  },
+
+  // Formatter settings per language
+  "languages": {
+    "JavaScript": {
+      "formatter": {
+        "external": {
+          "command": "pnpm",
+          "arguments": [
+            "biome",
+            "format",
+            "--stdin-file-path",
+            "{buffer_path}",
+          ],
+        },
+      },
+      "code_actions_on_format": {
+        "source.organizeImports.biome": true,
+        "source.fixAll.biome": true,
+      },
+    },
+    "TypeScript": {
+      "formatter": {
+        "external": {
+          "command": "pnpm",
+          "arguments": [
+            "biome",
+            "format",
+            "--stdin-file-path",
+            "{buffer_path}",
+          ],
+        },
+      },
+      "code_actions_on_format": {
+        "source.organizeImports.biome": true,
+        "source.fixAll.biome": true,
+      },
+    },
+    "TSX": {
+      "formatter": {
+        "external": {
+          "command": "pnpm",
+          "arguments": [
+            "biome",
+            "format",
+            "--stdin-file-path",
+            "{buffer_path}",
+          ],
+        },
+      },
+      "code_actions_on_format": {
+        "source.organizeImports.biome": true,
+        "source.fixAll.biome": true,
+      },
+    },
+    "JSON": {
+      "formatter": {
+        "external": {
+          "command": "pnpm",
+          "arguments": [
+            "biome",
+            "format",
+            "--stdin-file-path",
+            "{buffer_path}",
+          ],
+        },
+      },
+    },
+    "CSS": {
+      "formatter": {
+        "external": {
+          "command": "pnpm",
+          "arguments": [
+            "biome",
+            "format",
+            "--stdin-file-path",
+            "{buffer_path}",
+          ],
+        },
+      },
+    },
+  },
+
+  // Format on save
+  "format_on_save": "on",
+
+  // LSP settings for Tailwind CSS
+  "lsp": {
+    "tailwindcss-language-server": {
+      "settings": {
+        "tailwindCSS": {
+          "experimental": {
+            "classRegex": [
+              ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+              ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
+            ],
+          },
+        },
+      },
+    },
+  },
+}
