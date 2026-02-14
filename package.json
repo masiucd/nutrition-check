@@ -19,6 +19,7 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "^0.7.11",
+    "@tanstack/react-form": "^1.28.2",
     "@tanstack/react-router": "^1.159.5",
     "@tanstack/react-router-devtools": "^1.159.5",
     "@tanstack/react-router-ssr-query": "^1.159.5",
