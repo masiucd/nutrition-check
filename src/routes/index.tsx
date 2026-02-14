@@ -46,7 +46,7 @@ function App() {
 			<section className="mx-auto max-w-6xl border border-foreground">
 				<ul className="grid grid-cols-1 gap-5 p-2 md:grid-cols-3">
 					{data.map(product => (
-						<li key={product.name} className="my-4 border border-foreground rounded">
+						<li key={product.name} className="my-4 rounded border border-foreground">
 							<Heading tag="h2">
 								<Link to={`/products/$productId`} params={{productId: product.id.toString()}}>
 									{product.name}
@@ -55,7 +55,7 @@ function App() {
 							<p>{product.description}</p>
 							<p>${product.price}</p>
 							{product.image && (
-								<img src={product.image} alt={product.name} className="w-48 h-48 object-cover" />
+								<img src={product.image} alt={product.name} className="h-48 w-48 object-cover" />
 							)}
 						</li>
 					))}
