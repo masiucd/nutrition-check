@@ -10,7 +10,7 @@ export function PageWrapper(props: PropsWithChildren<Props>) {
 	return (
 		<section
 			className={cn(
-				"mx-auto my-8 max-w-6xl flex-1 px-4",
+				"mx-auto w-full max-w-7xl flex-1",
 				props.fluid ? "max-w-full" : null,
 				props.className,
 			)}
