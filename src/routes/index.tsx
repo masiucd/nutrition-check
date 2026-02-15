@@ -59,6 +59,11 @@ function App() {
 							)}
 						</li>
 					))}
+					<li>
+						<img src="./shoes/puma.jpg" alt="" />
+						<img src="./shoes/nike.jpg" alt="" />
+						<img src="./shoes/newbalance.jpg" alt="" />
+					</li>
 				</ul>
 			</section>
 		</div>

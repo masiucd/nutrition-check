@@ -9,12 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/App'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as ProductsProductIdRouteImport } from './routes/products/$productId'
+import { Route as AuthSignupRouteImport } from './routes/auth/signup'
+import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as ApaPathlessLayoutRouteRouteImport } from './routes/apa/_pathlessLayout/route'
 import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs'
 import { Route as DemoStartApiRequestRouteImport } from './routes/demo/start.api-request'
@@ -25,16 +25,6 @@ import { Route as DemoStartSsrSpaModeRouteImport } from './routes/demo/start.ssr
 import { Route as DemoStartSsrFullSsrRouteImport } from './routes/demo/start.ssr.full-ssr'
 import { Route as DemoStartSsrDataOnlyRouteImport } from './routes/demo/start.ssr.data-only'
 
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AppRoute = AppRouteImport.update({
   id: '/App',
   path: '/App',
@@ -53,6 +43,16 @@ const ProductsIndexRoute = ProductsIndexRouteImport.update({
 const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
   id: '/products/$productId',
   path: '/products/$productId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthSignupRoute = AuthSignupRouteImport.update({
+  id: '/auth/signup',
+  path: '/auth/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/auth/login',
+  path: '/auth/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApaPathlessLayoutRouteRoute = ApaPathlessLayoutRouteRouteImport.update({
@@ -104,9 +104,9 @@ const DemoStartSsrDataOnlyRoute = DemoStartSsrDataOnlyRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/App': typeof AppRoute
-  '/login': typeof LoginRoute
-  '/signup': typeof SignupRoute
   '/apa': typeof ApaPathlessLayoutRouteRouteWithChildren
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/products/': typeof ProductsIndexRoute
   '/apa/a': typeof ApaPathlessLayoutARoute
@@ -121,9 +121,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/App': typeof AppRoute
-  '/login': typeof LoginRoute
-  '/signup': typeof SignupRoute
   '/apa': typeof ApaPathlessLayoutRouteRouteWithChildren
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/products': typeof ProductsIndexRoute
   '/apa/a': typeof ApaPathlessLayoutARoute
@@ -139,9 +139,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/App': typeof AppRoute
-  '/login': typeof LoginRoute
-  '/signup': typeof SignupRoute
   '/apa/_pathlessLayout': typeof ApaPathlessLayoutRouteRouteWithChildren
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/products/': typeof ProductsIndexRoute
   '/apa/_pathlessLayout/a': typeof ApaPathlessLayoutARoute
@@ -158,9 +158,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/App'
-    | '/login'
-    | '/signup'
     | '/apa'
+    | '/auth/login'
+    | '/auth/signup'
     | '/products/$productId'
     | '/products/'
     | '/apa/a'
@@ -175,9 +175,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/App'
-    | '/login'
-    | '/signup'
     | '/apa'
+    | '/auth/login'
+    | '/auth/signup'
     | '/products/$productId'
     | '/products'
     | '/apa/a'
@@ -192,9 +192,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/App'
-    | '/login'
-    | '/signup'
     | '/apa/_pathlessLayout'
+    | '/auth/login'
+    | '/auth/signup'
     | '/products/$productId'
     | '/products/'
     | '/apa/_pathlessLayout/a'
@@ -210,9 +210,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRoute
-  LoginRoute: typeof LoginRoute
-  SignupRoute: typeof SignupRoute
   ApaPathlessLayoutRouteRoute: typeof ApaPathlessLayoutRouteRouteWithChildren
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthSignupRoute: typeof AuthSignupRoute
   ProductsProductIdRoute: typeof ProductsProductIdRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
   DemoApiNamesRoute: typeof DemoApiNamesRoute
@@ -226,20 +226,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/App': {
       id: '/App'
       path: '/App'
@@ -266,6 +252,20 @@ declare module '@tanstack/react-router' {
       path: '/products/$productId'
       fullPath: '/products/$productId'
       preLoaderRoute: typeof ProductsProductIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/signup': {
+      id: '/auth/signup'
+      path: '/auth/signup'
+      fullPath: '/auth/signup'
+      preLoaderRoute: typeof AuthSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/apa/_pathlessLayout': {
@@ -351,9 +351,9 @@ const ApaPathlessLayoutRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRoute,
-  LoginRoute: LoginRoute,
-  SignupRoute: SignupRoute,
   ApaPathlessLayoutRouteRoute: ApaPathlessLayoutRouteRouteWithChildren,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthSignupRoute: AuthSignupRoute,
   ProductsProductIdRoute: ProductsProductIdRoute,
   ProductsIndexRoute: ProductsIndexRoute,
   DemoApiNamesRoute: DemoApiNamesRoute,

@@ -38,7 +38,7 @@ function RootDocument({children}: {children: React.ReactNode}) {
 			</head>
 			<body>
 				<header>
-					<div className="mx-auto h-30 max-w-6xl border border-red-500">
+					<div className="mx-auto h-30 max-w-7xl border border-red-500">
 						<Link to="/">
 							<strong>Sick Fits</strong>
 						</Link>
@@ -87,7 +87,7 @@ function RootDocument({children}: {children: React.ReactNode}) {
 					]}
 				/>
 				<footer>
-					<div className="h-30 mx-auto max-w-6xl border border-red-500">
+					<div className="h-30 mx-auto max-w-7xl border border-red-500">
 						<p>Copyright &copy; {new Date().getFullYear()}</p>
 						<p>All rights reserved.</p>
 					</div>
