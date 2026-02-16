@@ -5,6 +5,7 @@ import {Heading, Text} from "@/components/typography"
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
+import {createNewUser} from "@/utils/server_fns/user.server"
 
 export const Route = createFileRoute("/auth/signup")({
 	component: RouteComponent,
@@ -20,7 +21,7 @@ function RouteComponent() {
 		},
 		onSubmit: async data => {
 			console.log(data.value)
-			//
+			await createNewUser({data: data.value})
 		},
 	})
 	return (
