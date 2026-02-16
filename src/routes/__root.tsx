@@ -45,10 +45,10 @@ function RootDocument({children}: {children: React.ReactNode}) {
 						<nav>
 							<ul className="flex flex-wrap gap-2 capitalize">
 								<li>
-									<Link to="/login">login</Link>
+									<Link to="/auth/login">login</Link>
 								</li>
 								<li>
-									<Link to="/signup">signup</Link>
+									<Link to="/auth/signup">signup</Link>
 								</li>
 								{/*<li>logout</li>*/}
 								{/*<li>
