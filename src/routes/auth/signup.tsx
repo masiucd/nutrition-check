@@ -1,15 +1,43 @@
 import {type AnyFieldApi, useForm} from "@tanstack/react-form"
 import {createFileRoute} from "@tanstack/react-router"
+import {createServerFn} from "@tanstack/react-start"
+import {hash} from "bcryptjs"
+import {z} from "zod"
 import {PageWrapper} from "@/components/page_wrapper"
 import {Heading, Text} from "@/components/typography"
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
-import {createNewUser} from "@/utils/server_fns/user.server"
 
 export const Route = createFileRoute("/auth/signup")({
 	component: RouteComponent,
 })
+
+let NewUserSchema = z
+	.object({
+		username: z.string().min(3).max(100),
+		email: z.email().max(100),
+		password: z.string().min(6).max(100),
+		repeatPassword: z.string().min(6).max(100),
+	})
+	.refine(data => data.password === data.repeatPassword, {
+		message: "Passwords do not match",
+		path: ["repeatPassword"],
+	})
+let createNewUser = createServerFn({method: "POST"})
+	.inputValidator(NewUserSchema)
+	.handler(async ({data}) => {
+		let hashedPassword = await hash(data.password, 10)
+		console.log("Hashed ---> ", hashedPassword)
+		// let rows = await db.insert(user).values({
+		// 	username: data.username,
+		// 	email: data.email,
+		// 	passwordHash: hashedPassword,
+		// })
+		// return rows.rows.length > 0 ? rows.rows[0] : null
+		console.log(data)
+		return "Hello"
+	})
 
 function RouteComponent() {
 	let form = useForm({
@@ -22,6 +50,8 @@ function RouteComponent() {
 		onSubmit: async data => {
 			console.log(data.value)
 			await createNewUser({data: data.value})
+			// await createNewUser({data: data.value})
+			// await signupUser(data.value)
 		},
 	})
 	return (
@@ -108,7 +138,7 @@ function RouteComponent() {
 									onBlur: ({value}) =>
 										!value
 											? "Password is required"
-											: !value.includes("!@#$%^&*()_")
+											: !value.includes("!")
 												? "Password must contain at least one special character"
 												: value.length < 3
 													? "Password must be at least 3 characters long"
@@ -141,7 +171,7 @@ function RouteComponent() {
 											? "Repeat password needs to match the password"
 											: apa.fieldApi.form.state.values.password !== value
 												? "Passwords do not match"
-												: !value.includes("!@#$%^&*()_")
+												: !value.includes("!")
 													? "Password must contain special characters"
 													: null
 									},
