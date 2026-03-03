@@ -1,4 +1,5 @@
-import {type AnyFieldApi, useForm} from "@tanstack/react-form"
+import type {AnyFieldApi} from "@tanstack/react-form"
+import {useForm} from "@tanstack/react-form"
 import {createFileRoute} from "@tanstack/react-router"
 import {createServerFn} from "@tanstack/react-start"
 import {hash} from "bcryptjs"
@@ -8,6 +9,8 @@ import {Heading, Text} from "@/components/typography"
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
+import {db} from "@/db/connect"
+import {user} from "@/db/schema"
 
 export const Route = createFileRoute("/auth/signup")({
 	component: RouteComponent,
@@ -29,14 +32,13 @@ let createNewUser = createServerFn({method: "POST"})
 	.handler(async ({data}) => {
 		let hashedPassword = await hash(data.password, 10)
 		console.log("Hashed ---> ", hashedPassword)
-		// let rows = await db.insert(user).values({
-		// 	username: data.username,
-		// 	email: data.email,
-		// 	passwordHash: hashedPassword,
-		// })
-		// return rows.rows.length > 0 ? rows.rows[0] : null
-		console.log(data)
-		return "Hello"
+		console.log("Data", data)
+		let rows = await db.insert(user).values({
+			username: data.username,
+			email: data.email,
+			passwordHash: hashedPassword,
+		})
+		return rows.rows.length > 0 ? rows.rows[0] : null
 	})
 
 function RouteComponent() {
