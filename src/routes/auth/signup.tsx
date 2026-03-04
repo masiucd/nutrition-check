@@ -1,8 +1,9 @@
 import type {AnyFieldApi} from "@tanstack/react-form"
 import {useForm} from "@tanstack/react-form"
-import {createFileRoute} from "@tanstack/react-router"
+import {createFileRoute, useNavigate} from "@tanstack/react-router"
 import {createServerFn} from "@tanstack/react-start"
 import {hash} from "bcryptjs"
+import {useState} from "react"
 import {z} from "zod"
 import {PageWrapper} from "@/components/page_wrapper"
 import {Heading, Text} from "@/components/typography"
@@ -16,32 +17,9 @@ export const Route = createFileRoute("/auth/signup")({
 	component: RouteComponent,
 })
 
-let NewUserSchema = z
-	.object({
-		username: z.string().min(3).max(100),
-		email: z.email().max(100),
-		password: z.string().min(6).max(100),
-		repeatPassword: z.string().min(6).max(100),
-	})
-	.refine(data => data.password === data.repeatPassword, {
-		message: "Passwords do not match",
-		path: ["repeatPassword"],
-	})
-let createNewUser = createServerFn({method: "POST"})
-	.inputValidator(NewUserSchema)
-	.handler(async ({data}) => {
-		let hashedPassword = await hash(data.password, 10)
-		console.log("Hashed ---> ", hashedPassword)
-		console.log("Data", data)
-		let rows = await db.insert(user).values({
-			username: data.username,
-			email: data.email,
-			passwordHash: hashedPassword,
-		})
-		return rows.rows.length > 0 ? rows.rows[0] : null
-	})
-
 function RouteComponent() {
+	let navigate = useNavigate()
+	let [signupError, _setSignupError] = useState<{message: string} | null>(null)
 	let form = useForm({
 		defaultValues: {
 			username: "",
@@ -51,9 +29,14 @@ function RouteComponent() {
 		},
 		onSubmit: async data => {
 			console.log(data.value)
-			await createNewUser({data: data.value})
-			// await createNewUser({data: data.value})
-			// await signupUser(data.value)
+			let maybeNewUser = await createNewUser({data: data.value})
+			console.log("maybeNewUser", maybeNewUser)
+			if (maybeNewUser !== null) {
+				// we want to redirect the user to the profile page
+				navigate({to: "/auth/profile"})
+			} else {
+				// We want to show an error to the user
+			}
 		},
 	})
 	return (
@@ -72,6 +55,7 @@ function RouteComponent() {
 					}}
 				>
 					<fieldset className="flex flex-col gap-3 rounded-md border-2 border-foreground p-2">
+						{signupError !== null ? <Heading tag="h4">{signupError.message}</Heading> : null}
 						<legend>Sign up</legend>
 						<div className="flex gap-2">
 							<form.Field
@@ -107,14 +91,7 @@ function RouteComponent() {
 							<form.Field
 								name="email"
 								validators={{
-									onBlur: ({value}) =>
-										!value
-											? "Email is required"
-											: !value.includes("@")
-												? "Invalid email"
-												: !value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
-													? "Invalid email"
-													: null,
+									onBlur: ({value}) => emailValidator(value),
 									onBlurAsyncDebounceMs: 200,
 								}}
 								children={field => (
@@ -134,13 +111,14 @@ function RouteComponent() {
 							/>
 						</div>
 						<div className="flex gap-2">
+							{/*<PasswordsSection form={form} />*/}
 							<form.Field
 								name="password"
 								validators={{
 									onBlur: ({value}) =>
 										!value
 											? "Password is required"
-											: !value.includes("!")
+											: !containsSpecialCharacter(value)
 												? "Password must contain at least one special character"
 												: value.length < 3
 													? "Password must be at least 3 characters long"
@@ -166,17 +144,12 @@ function RouteComponent() {
 							<form.Field
 								name="repeatPassword"
 								validators={{
-									onBlur: ({value, ...apa}) => {
-										// console.log("Spa", apa.fieldApi.form.state.values.password)
-										// console.log("Spa", apa.fieldApi.form.state.errors)
-										return !value
+									onBlur: ({value, fieldApi}) =>
+										!value
 											? "Repeat password needs to match the password"
-											: apa.fieldApi.form.state.values.password !== value
+											: fieldApi.form.state.values.password.trim() !== value.trim()
 												? "Passwords do not match"
-												: !value.includes("!")
-													? "Password must contain special characters"
-													: null
-									},
+												: null,
 								}}
 								children={field => (
 									<div className="flex flex-1 flex-col gap-2">
@@ -218,4 +191,54 @@ function FieldInfo({field}: {field: AnyFieldApi}) {
 			{field.state.meta.isValidating ? "Validating..." : null}
 		</>
 	)
+}
+
+let NewUserSchema = z
+	.object({
+		username: z.string().min(3).max(100),
+		email: z.email().max(100),
+		password: z.string().min(6).max(100),
+		repeatPassword: z.string().min(6).max(100),
+	})
+	.refine(data => data.password === data.repeatPassword, {
+		message: "Passwords do not match",
+		path: ["repeatPassword"],
+	})
+let createNewUser = createServerFn({method: "POST"})
+	.inputValidator(NewUserSchema)
+	.handler(async ({data}) => {
+		let hashedPassword = await hash(data.password, 10)
+		console.log("Hashed ---> ", hashedPassword)
+		console.log("Data", data)
+		let rows = await db.insert(user).values({
+			username: data.username,
+			email: data.email,
+			passwordHash: hashedPassword,
+		})
+		return rows.rows.length > 0 ? rows.rows[0] : null
+	})
+
+// Special chatterers for the password inputs
+export const containsSpecialCharacter = (password: string): boolean => {
+	/**
+	 * Checks if the given password contains at least one special character.
+	 *
+	 * @param password - The password to validate.
+	 * @returns True if the password contains at least one special character, otherwise false.
+	 */
+	const specialCharacters = /[!@#$%^&*(),.?":{}|<>]/
+	return specialCharacters.test(password)
+}
+
+function emailValidator(value: string) {
+	if (!value) {
+		return "Email is required"
+	}
+	if (!value.includes("@")) {
+		return "Invalid email"
+	}
+	if (!value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+		return "Invalid email"
+	}
+	return null
 }

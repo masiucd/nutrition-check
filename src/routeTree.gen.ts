@@ -14,6 +14,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as ProductsProductIdRouteImport } from './routes/products/$productId'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
+import { Route as AuthProfileRouteImport } from './routes/auth/profile'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as ApaPathlessLayoutRouteRouteImport } from './routes/apa/_pathlessLayout/route'
 import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs'
@@ -48,6 +49,11 @@ const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/auth/signup',
   path: '/auth/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthProfileRoute = AuthProfileRouteImport.update({
+  id: '/auth/profile',
+  path: '/auth/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/App': typeof AppRoute
   '/apa': typeof ApaPathlessLayoutRouteRouteWithChildren
   '/auth/login': typeof AuthLoginRoute
+  '/auth/profile': typeof AuthProfileRoute
   '/auth/signup': typeof AuthSignupRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/products/': typeof ProductsIndexRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/App': typeof AppRoute
   '/apa': typeof ApaPathlessLayoutRouteRouteWithChildren
   '/auth/login': typeof AuthLoginRoute
+  '/auth/profile': typeof AuthProfileRoute
   '/auth/signup': typeof AuthSignupRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/products': typeof ProductsIndexRoute
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/App': typeof AppRoute
   '/apa/_pathlessLayout': typeof ApaPathlessLayoutRouteRouteWithChildren
   '/auth/login': typeof AuthLoginRoute
+  '/auth/profile': typeof AuthProfileRoute
   '/auth/signup': typeof AuthSignupRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/products/': typeof ProductsIndexRoute
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/App'
     | '/apa'
     | '/auth/login'
+    | '/auth/profile'
     | '/auth/signup'
     | '/products/$productId'
     | '/products/'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/App'
     | '/apa'
     | '/auth/login'
+    | '/auth/profile'
     | '/auth/signup'
     | '/products/$productId'
     | '/products'
@@ -194,6 +205,7 @@ export interface FileRouteTypes {
     | '/App'
     | '/apa/_pathlessLayout'
     | '/auth/login'
+    | '/auth/profile'
     | '/auth/signup'
     | '/products/$productId'
     | '/products/'
@@ -212,6 +224,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRoute
   ApaPathlessLayoutRouteRoute: typeof ApaPathlessLayoutRouteRouteWithChildren
   AuthLoginRoute: typeof AuthLoginRoute
+  AuthProfileRoute: typeof AuthProfileRoute
   AuthSignupRoute: typeof AuthSignupRoute
   ProductsProductIdRoute: typeof ProductsProductIdRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
@@ -259,6 +272,13 @@ declare module '@tanstack/react-router' {
       path: '/auth/signup'
       fullPath: '/auth/signup'
       preLoaderRoute: typeof AuthSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/profile': {
+      id: '/auth/profile'
+      path: '/auth/profile'
+      fullPath: '/auth/profile'
+      preLoaderRoute: typeof AuthProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/login': {
@@ -353,6 +373,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRoute,
   ApaPathlessLayoutRouteRoute: ApaPathlessLayoutRouteRouteWithChildren,
   AuthLoginRoute: AuthLoginRoute,
+  AuthProfileRoute: AuthProfileRoute,
   AuthSignupRoute: AuthSignupRoute,
   ProductsProductIdRoute: ProductsProductIdRoute,
   ProductsIndexRoute: ProductsIndexRoute,
