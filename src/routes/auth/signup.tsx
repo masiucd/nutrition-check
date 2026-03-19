@@ -1,17 +1,13 @@
 import type {AnyFieldApi} from "@tanstack/react-form"
 import {useForm} from "@tanstack/react-form"
 import {createFileRoute, useNavigate} from "@tanstack/react-router"
-import {createServerFn} from "@tanstack/react-start"
-import {hash} from "bcryptjs"
 import {useState} from "react"
-import {z} from "zod"
 import {PageWrapper} from "@/components/page_wrapper"
 import {Heading, Text} from "@/components/typography"
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
-import {db} from "@/db/connect"
-import {user} from "@/db/schema"
+import {createNewUser} from "@/utils/server_fns/user.server"
 
 export const Route = createFileRoute("/auth/signup")({
 	component: RouteComponent,
@@ -19,7 +15,7 @@ export const Route = createFileRoute("/auth/signup")({
 
 function RouteComponent() {
 	let navigate = useNavigate()
-	let [signupError, _setSignupError] = useState<{message: string} | null>(null)
+	let [signupError, setSignupError] = useState<{message: string} | null>(null)
 	let form = useForm({
 		defaultValues: {
 			username: "",
@@ -36,6 +32,8 @@ function RouteComponent() {
 				navigate({to: "/auth/profile"})
 			} else {
 				// We want to show an error to the user
+				console.log("signup error", maybeNewUser)
+				setSignupError({message: "Something went wrong. Please try again."})
 			}
 		},
 	})
@@ -115,14 +113,7 @@ function RouteComponent() {
 							<form.Field
 								name="password"
 								validators={{
-									onBlur: ({value}) =>
-										!value
-											? "Password is required"
-											: !containsSpecialCharacter(value)
-												? "Password must contain at least one special character"
-												: value.length < 3
-													? "Password must be at least 3 characters long"
-													: null,
+									onBlur: ({value}) => passwordValidator(value),
 									onBlurAsyncDebounceMs: 500,
 								}}
 								children={field => (
@@ -193,31 +184,6 @@ function FieldInfo({field}: {field: AnyFieldApi}) {
 	)
 }
 
-let NewUserSchema = z
-	.object({
-		username: z.string().min(3).max(100),
-		email: z.email().max(100),
-		password: z.string().min(6).max(100),
-		repeatPassword: z.string().min(6).max(100),
-	})
-	.refine(data => data.password === data.repeatPassword, {
-		message: "Passwords do not match",
-		path: ["repeatPassword"],
-	})
-let createNewUser = createServerFn({method: "POST"})
-	.inputValidator(NewUserSchema)
-	.handler(async ({data}) => {
-		let hashedPassword = await hash(data.password, 10)
-		console.log("Hashed ---> ", hashedPassword)
-		console.log("Data", data)
-		let rows = await db.insert(user).values({
-			username: data.username,
-			email: data.email,
-			passwordHash: hashedPassword,
-		})
-		return rows.rows.length > 0 ? rows.rows[0] : null
-	})
-
 // Special chatterers for the password inputs
 export const containsSpecialCharacter = (password: string): boolean => {
 	/**
@@ -239,6 +205,19 @@ function emailValidator(value: string) {
 	}
 	if (!value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
 		return "Invalid email"
+	}
+	return null
+}
+
+function passwordValidator(value: string) {
+	if (!value) {
+		return "Password is required"
+	}
+	if (!containsSpecialCharacter(value)) {
+		return "Password must contain at least one special character"
+	}
+	if (value.length < 3) {
+		return "Password must be at least 3 characters long"
 	}
 	return null
 }

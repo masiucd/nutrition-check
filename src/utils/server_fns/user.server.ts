@@ -1,7 +1,11 @@
 import {createServerFn} from "@tanstack/react-start"
-import {z} from "zod"
+import {hash} from "bcryptjs"
+import {eq} from "drizzle-orm"
+import z from "zod"
+import {db} from "@/db/connect"
+import {user} from "@/db/schema"
 
-let _NewUserSchema = z
+let NewUserSchema = z
 	.object({
 		username: z.string().min(3).max(100),
 		email: z.email().max(100),
@@ -14,35 +18,24 @@ let _NewUserSchema = z
 	})
 
 export let createNewUser = createServerFn({method: "POST"})
-	// .inputValidator(_NewUserSchema)
-	// .inputValidator(data => {
-	// 	if (!(data instanceof FormData)) {
-	// 		throw new Error("Invalid form data")
-	// 	}
-	// 	let username = data.get("username")
-	// 	let email = data.get("email")
-	// 	let password = data.get("password")
-	// 	let repeatPassword = data.get("repeatPassword")
-
-	// 	// Will throw if any of the fields are missing or invalid - option is to use safeParse if we want to handle errors differently
-	// 	let parsed = NewUserSchema.parse({
-	// 		username: username,
-	// 		email: email,
-	// 		password: password,
-	// 		repeatPassword: repeatPassword,
-	// 	})
-
-	// 	return parsed
-	// })
-	//   .inputValidator(( { email: string; password: string; name: string }) => data)
+	.inputValidator(NewUserSchema)
 	.handler(async ({data}) => {
-		// let hashedPassword = await hash(data.password, 10)
-		// let rows = await db.insert(user).values({
-		// 	username: data.username,
-		// 	email: data.email,
-		// 	passwordHash: hashedPassword,
-		// })
-		// return rows.rows.length > 0 ? rows.rows[0] : null
-		console.log(data)
-		return "Hello"
+		let hashedPassword = await hash(data.password, 10)
+		console.log("Hashed ---> ", hashedPassword)
+		console.log("Data", data)
+
+		// check if user already exists
+		const existingUser = await db.select().from(user).where(eq(user.email, data.email)).limit(1)
+		if (existingUser.length > 0) {
+			console.log("Existing user", existingUser)
+			return null
+		}
+
+		let rows = await db.insert(user).values({
+			username: data.username,
+			email: data.email,
+			passwordHash: hashedPassword,
+		})
+		console.log("Rows", rows)
+		return rows.rows.length > 0 ? rows.rows[0] : null
 	})
