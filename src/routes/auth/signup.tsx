@@ -1,13 +1,14 @@
 import type {AnyFieldApi} from "@tanstack/react-form"
 import {useForm} from "@tanstack/react-form"
 import {createFileRoute, useNavigate} from "@tanstack/react-router"
+import {useServerFn} from "@tanstack/react-start"
 import {useState} from "react"
 import {PageWrapper} from "@/components/page_wrapper"
 import {Heading, Text} from "@/components/typography"
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
-import {createNewUser} from "@/utils/server_fns/user.server"
+import {createNewUser} from "@/utils/user.functions"
 
 export const Route = createFileRoute("/auth/signup")({
 	component: RouteComponent,
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/auth/signup")({
 function RouteComponent() {
 	let navigate = useNavigate()
 	let [signupError, setSignupError] = useState<{message: string} | null>(null)
+	let registerNewUser = useServerFn(createNewUser)
 	let form = useForm({
 		defaultValues: {
 			username: "",
@@ -25,7 +27,7 @@ function RouteComponent() {
 		},
 		onSubmit: async data => {
 			console.log(data.value)
-			let maybeNewUser = await createNewUser({data: data.value})
+			let maybeNewUser = await registerNewUser({data: data.value})
 			console.log("maybeNewUser", maybeNewUser)
 			if (maybeNewUser !== null) {
 				// we want to redirect the user to the profile page
@@ -53,8 +55,12 @@ function RouteComponent() {
 					}}
 				>
 					<fieldset className="flex flex-col gap-3 rounded-md border-2 border-foreground p-2">
-						{signupError !== null ? <Heading tag="h4">{signupError.message}</Heading> : null}
-						<legend>Sign up</legend>
+						{signupError !== null ? (
+							<Heading tag="h4" className="text-red-400 text-shadow-2xs">
+								{signupError.message}
+							</Heading>
+						) : null}
+						<legend className="text-2xl text-bold">Sick Fits</legend>
 						<div className="flex gap-2">
 							<form.Field
 								name="username"
