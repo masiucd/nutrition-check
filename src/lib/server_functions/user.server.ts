@@ -5,7 +5,7 @@ import z from "zod"
 import {db} from "@/db/connect"
 import {user} from "@/db/schema"
 
-let NewUserSchema = z
+const NewUserSchema = z
 	.object({
 		username: z.string().min(3).max(100),
 		email: z.email().max(100),
@@ -17,10 +17,10 @@ let NewUserSchema = z
 		path: ["repeatPassword"],
 	})
 
-export let createNewUser = createServerFn({method: "POST"})
+export const createNewUser = createServerFn({method: "POST"})
 	.inputValidator(NewUserSchema)
 	.handler(async ({data}) => {
-		let hashedPassword = await hash(data.password, 10)
+		const hashedPassword = await hash(data.password, 10)
 		console.log("Hashed ---> ", hashedPassword)
 		console.log("Data", data)
 
@@ -31,7 +31,7 @@ export let createNewUser = createServerFn({method: "POST"})
 			return null
 		}
 
-		let rows = await db.insert(user).values({
+		const rows = await db.insert(user).values({
 			username: data.username,
 			email: data.email,
 			passwordHash: hashedPassword,

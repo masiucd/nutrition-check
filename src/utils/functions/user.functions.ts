@@ -4,22 +4,9 @@
 import {createServerFn} from "@tanstack/react-start"
 import z from "zod"
 import {comparePassword, hashPassword} from "@/lib/hash.server"
-import { findUserByEmail, insertUser } from "./user.server"
-import { SignJWT, jwtVerify } from 'jose'
-
-const secret = new TextEncoder().encode('super-secret')
-
-const token = await new SignJWT({ userId: 42 })
-  .setProtectedHeader({ alg: 'HS256' })
-  .setExpirationTime('1h')
-  .sign(secret)
-
-const { payload } = await jwtVerify(token, secret)
-console.log(payload.userId) // 42
-
-
-
-
+import {useAppSession} from "../session.server"
+import {findUserByEmail, findUserById, insertUser} from "./functions/server/user.server"
+import {createToken} from "./json_web_token"
 
 const NewUserSchema = z
 	.object({
@@ -59,21 +46,35 @@ export const loginUser = createServerFn({method: "POST"})
 	.handler(async ({data}) => {
 		const existingUser = await findUserByEmail(data.email)
 		if (existingUser === null) {
-			return {success: false, message: "Invalid email or password"} as const
+			return {success: false, message: "Invalid credentials"} as const
 		}
 		const passwordMatch = await comparePassword(data.password, existingUser.passwordHash)
 		if (!passwordMatch) {
-			return {success: false, message: "Invalid email or password"} as const
+			return {success: false, message: "Invalid credentials"} as const
 		}
 
 		// TODO
 		// if OK we want to create a session cookie with a JWT token
 		//
 
-		let token =
+		const _token = createToken(existingUser.id)
 
 		return {
 			success: true,
 			user: {id: existingUser.id, username: existingUser.username, email: existingUser.email},
 		} as const
 	})
+
+export const getCurrentUserFn = createServerFn({method: "GET"}).handler(async () => {
+	const session = await useAppSession()
+	const userId =
+		session.data.userId && typeof session.data.userId === "string"
+			? parseInt(session.data.userId, 10)
+			: null
+
+	if (!userId) {
+		return null
+	}
+
+	return await findUserById(userId)
+})

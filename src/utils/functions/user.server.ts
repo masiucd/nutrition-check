@@ -34,7 +34,7 @@ export async function findUserById(id: number) {
  * @returns The inserted user email and username if the insertion was successful, null otherwise
  */
 export async function insertUser(userData: {username: string; email: string; password: string}) {
-	let result = await db
+	const result = await db
 		.insert(user)
 		.values({
 			username: userData.username,

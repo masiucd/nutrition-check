@@ -6,7 +6,7 @@ import {db} from "@/db/connect"
 import {product, productImage} from "@/db/schema"
 
 async function readProducts() {
-	let products = await db
+	const products = await db
 		.select({
 			id: product.id,
 			name: product.name,
@@ -19,7 +19,7 @@ async function readProducts() {
 	return products
 }
 
-let getUsers = createServerFn({method: "GET"}).handler(async () => {
+const getUsers = createServerFn({method: "GET"}).handler(async () => {
 	try {
 		return await readProducts()
 	} catch (error) {
@@ -28,7 +28,7 @@ let getUsers = createServerFn({method: "GET"}).handler(async () => {
 	}
 })
 
-export let Route = createFileRoute("/")({
+export const Route = createFileRoute("/")({
 	component: App,
 	loader: async () => {
 		return await getUsers()
@@ -36,7 +36,7 @@ export let Route = createFileRoute("/")({
 })
 
 function App() {
-	let data = Route.useLoaderData()
+	const data = Route.useLoaderData()
 	return (
 		<div>
 			<div className="mb-10 text-center">

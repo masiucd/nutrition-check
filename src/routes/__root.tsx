@@ -74,7 +74,7 @@ function RootDocument({children}: {children: React.ReactNode}) {
 					</div>
 				</header>
 
-				<main className="flex flex-col min-h-[calc(100dvh-15rem)]">{children}</main>
+				<main className="flex min-h-[calc(100dvh-15rem)] flex-col">{children}</main>
 				<TanStackDevtools
 					config={{
 						position: "bottom-right",
@@ -87,7 +87,7 @@ function RootDocument({children}: {children: React.ReactNode}) {
 					]}
 				/>
 				<footer>
-					<div className="h-30 mx-auto max-w-7xl border border-red-500">
+					<div className="mx-auto h-30 max-w-7xl border border-red-500">
 						<p>Copyright &copy; {new Date().getFullYear()}</p>
 						<p>All rights reserved.</p>
 					</div>
