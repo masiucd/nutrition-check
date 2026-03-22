@@ -8,7 +8,9 @@ interface SessionData {
 	role?: string
 }
 
-export function useAppSession() {
+const SevenDaysInSeconds = 60 * 60 * 24 * 7
+
+export function appSession() {
 	return useSession<SessionData>({
 		// Session configuration
 		name: "app-session",
@@ -18,6 +20,7 @@ export function useAppSession() {
 			secure: env.ENVIRONMENT === "production",
 			sameSite: "lax",
 			httpOnly: true,
+			maxAge: SevenDaysInSeconds,
 		},
 	})
 }
