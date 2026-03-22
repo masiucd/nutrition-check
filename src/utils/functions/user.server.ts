@@ -24,7 +24,15 @@ export async function findUserByEmail(email: string) {
  * @returns The user or null if not found
  **/
 export async function findUserById(id: number) {
-	const existingUser = await db.select().from(user).where(eq(user.id, id)).limit(1)
+	const existingUser = await db
+		.select({
+			id: user.id,
+			username: user.username,
+			email: user.email,
+		})
+		.from(user)
+		.where(eq(user.id, id))
+		.limit(1)
 	return existingUser.at(0) ?? null
 }
 

@@ -1,12 +1,12 @@
 // Server function wrappers (createServerFn)
 // These functions can be called from the client to interact with the server
-// For example, they can be used to register a new user or log in an existing user
+
+import {redirect} from "@tanstack/react-router"
 import {createServerFn} from "@tanstack/react-start"
 import z from "zod"
 import {comparePassword, hashPassword} from "@/lib/hash.server"
-import {useAppSession} from "../session.server"
-import {findUserByEmail, findUserById, insertUser} from "./functions/server/user.server"
-import {createToken} from "./json_web_token"
+import {appSession} from "../session"
+import {findUserByEmail, findUserById, insertUser} from "./user.server"
 
 const NewUserSchema = z
 	.object({
@@ -48,16 +48,15 @@ export const loginUser = createServerFn({method: "POST"})
 		if (existingUser === null) {
 			return {success: false, message: "Invalid credentials"} as const
 		}
+
 		const passwordMatch = await comparePassword(data.password, existingUser.passwordHash)
 		if (!passwordMatch) {
 			return {success: false, message: "Invalid credentials"} as const
 		}
 
-		// TODO
-		// if OK we want to create a session cookie with a JWT token
-		//
-
-		const _token = createToken(existingUser.id)
+		const session = await appSession()
+		// TODO create token
+		await session.update({userId: existingUser.id.toString()})
 
 		return {
 			success: true,
@@ -65,8 +64,14 @@ export const loginUser = createServerFn({method: "POST"})
 		} as const
 	})
 
+export const logoutFn = createServerFn({method: "POST"}).handler(async () => {
+	const session = await appSession()
+	await session.clear()
+	throw redirect({to: "/"})
+})
+
 export const getCurrentUserFn = createServerFn({method: "GET"}).handler(async () => {
-	const session = await useAppSession()
+	const session = await appSession()
 	const userId =
 		session.data.userId && typeof session.data.userId === "string"
 			? parseInt(session.data.userId, 10)

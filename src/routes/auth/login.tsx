@@ -8,7 +8,7 @@ import {Heading, Text} from "@/components/typography"
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
-import {loginUser} from "@/utils/user.functions"
+import {loginUser} from "@/utils/functions/user.functions"
 
 export const Route = createFileRoute("/auth/login")({
 	component: LoginPage,
@@ -27,9 +27,7 @@ function validatePassword(value: string): string | null {
 	return null
 }
 
-// --- Components ---
-
-type FormFieldProps = {
+interface FormFieldProps {
 	label: string
 	type?: "text" | "email" | "password"
 	field: AnyFieldApi

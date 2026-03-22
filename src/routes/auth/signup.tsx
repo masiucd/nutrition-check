@@ -8,7 +8,7 @@ import {Heading, Text} from "@/components/typography"
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
-import {createNewUser} from "@/utils/user.functions"
+import {createNewUser} from "@/utils/functions/user.functions"
 
 export const Route = createFileRoute("/auth/signup")({
 	component: SignupPage,
