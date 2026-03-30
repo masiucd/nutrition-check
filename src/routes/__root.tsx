@@ -35,8 +35,11 @@ export const Route = createRootRoute({
 	}),
 
 	beforeLoad: async () => {
-		const user = await getCurrentUserFn()
-		return {user}
+		const maybeUser = await getCurrentUserFn()
+		if (maybeUser !== null) {
+			return {user: maybeUser}
+		}
+		return {user: null}
 	},
 
 	shellComponent: RootDocument,
@@ -54,7 +57,7 @@ function LogoutButton() {
 }
 
 function RootDocument({children}: {children: React.ReactNode}) {
-	const {user} = Route.useRouteContext()
+	const ctx = Route.useRouteContext()
 
 	return (
 		<html lang="en">
@@ -63,7 +66,7 @@ function RootDocument({children}: {children: React.ReactNode}) {
 			</head>
 			<body>
 				<QueryClientProvider client={queryClient}>
-					<AuthProvider initialUser={user}>
+					<AuthProvider initialUser={ctx.user}>
 						<header>
 							<div className="mx-auto h-30 max-w-7xl border border-red-500">
 								<Link to="/">
@@ -71,7 +74,7 @@ function RootDocument({children}: {children: React.ReactNode}) {
 								</Link>
 								<nav>
 									<ul className="flex flex-wrap gap-2 capitalize">
-										{user ? (
+										{ctx.user ? (
 											<>
 												<li>
 													<LogoutButton />
