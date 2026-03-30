@@ -19,7 +19,7 @@ export const Route = createFileRoute("/auth/signup")({
 /**
  * Checks if the given password contains at least one special character.
  */
-export const containsSpecialCharacter = (password: string): boolean => {
+const containsSpecialCharacter = (password: string): boolean => {
 	return /[!@#$%^&*(),.?":{}|<>]/.test(password)
 }
 
@@ -49,9 +49,7 @@ function validateRepeatPassword(value: string, password: string): string | null 
 	return null
 }
 
-// --- Components ---
-
-type FormFieldProps = {
+interface FormFieldProps {
 	label: string
 	type?: "text" | "email" | "password"
 	field: AnyFieldApi

@@ -1,5 +1,6 @@
 import {createFileRoute, redirect} from "@tanstack/react-router"
-import {Heading} from "@/components/typography"
+import {PageWrapper} from "@/components/page_wrapper"
+import {Heading, Text} from "@/components/typography"
 
 export const Route = createFileRoute("/auth/profile")({
 	component: RouteComponent,
@@ -20,8 +21,18 @@ function RouteComponent() {
 	const ctx = Route.useRouteContext()
 	if (!ctx.user) return null
 	return (
-		<div>
-			<Heading tag="h1">Hello {ctx.user.username} Profile page</Heading>
-		</div>
+		<PageWrapper>
+			<div className="flex flex-col">
+				<Heading tag="h1">Hello {ctx.user.username} Profile page</Heading>
+				<Text>{ctx.user.id}</Text>
+				<Text>{ctx.user.email}</Text>
+			</div>
+		</PageWrapper>
 	)
 }
+
+// Things the user should be able to do on their profile page
+// - Edit their profile
+// - View their orders
+// - Get support
+//

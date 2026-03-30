@@ -74,7 +74,7 @@ function LoginPage() {
 			setLoginError(null)
 			const result = await login({data: value})
 			if (result.success) {
-				navigate({to: "/"})
+				navigate({to: "/auth/profile"})
 			} else {
 				setLoginError(result.message)
 			}
