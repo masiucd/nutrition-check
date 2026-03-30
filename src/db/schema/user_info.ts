@@ -1,7 +1,7 @@
-import { relations } from "drizzle-orm";
-import { integer, pgTable, varchar } from "drizzle-orm/pg-core";
-import { gender } from "./gender";
-import { user } from "./user";
+import {relations} from "drizzle-orm"
+import {integer, pgTable, varchar} from "drizzle-orm/pg-core"
+import {gender} from "./gender"
+import {user} from "./user"
 
 /**
  * User information table schema.
@@ -20,10 +20,12 @@ export const userInfo = pgTable("user_info", {
 		.primaryKey()
 		.references(() => user.id)
 		.notNull(),
-	name: varchar({ length: 255 }),
+	// TODO make new migration to update existing columns
+	firstName: varchar("first_name", {length: 100}),
+	lastName: varchar("last_name", {length: 100}),
 	age: integer(),
 	gender: integer().references(() => gender.id),
-});
+})
 
 /**
  * Defines the relations for the userInfo table.
@@ -32,7 +34,7 @@ export const userInfo = pgTable("user_info", {
  * - gender: One-to-one relationship with the gender table, mapping userInfo.gender to gender.id
  * - user: One-to-one relationship with the user table, mapping userInfo.id to user.id
  */
-export const userInfoRelations = relations(userInfo, ({ one }) => ({
+export const userInfoRelations = relations(userInfo, ({one}) => ({
 	gender: one(gender, {
 		fields: [userInfo.gender],
 		references: [gender.id],
@@ -41,4 +43,4 @@ export const userInfoRelations = relations(userInfo, ({ one }) => ({
 		fields: [userInfo.id],
 		references: [user.id],
 	}),
-}));
+}))

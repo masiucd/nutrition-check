@@ -6,7 +6,7 @@
 
 import {eq} from "drizzle-orm"
 import {db} from "@/db/connect"
-import {user} from "@/db/schema"
+import {user, userInfo} from "@/db/schema"
 
 /**
  * Find a user by their email
@@ -14,7 +14,20 @@ import {user} from "@/db/schema"
  * @returns The user or null if not found
  */
 export async function findUserByEmail(email: string) {
-	const existingUser = await db.select().from(user).where(eq(user.email, email)).limit(1)
+	const existingUser = await db
+		.select({
+			userId: user.id,
+			username: user.username,
+			email: user.email,
+			firstName: userInfo.firstName,
+			lastName: userInfo.lastName,
+			age: userInfo.age,
+			gender: userInfo.gender,
+		})
+		.from(user)
+		.leftJoin(userInfo, eq(user.id, userInfo.id))
+		.where(eq(user.email, email))
+		.limit(1)
 	return existingUser.at(0) ?? null
 }
 
@@ -26,11 +39,16 @@ export async function findUserByEmail(email: string) {
 export async function findUserById(id: number) {
 	const existingUser = await db
 		.select({
-			id: user.id,
+			userId: user.id,
 			username: user.username,
 			email: user.email,
+			firstName: userInfo.firstName,
+			lastName: userInfo.lastName,
+			age: userInfo.age,
+			gender: userInfo.gender,
 		})
 		.from(user)
+		.leftJoin(userInfo, eq(user.id, userInfo.id))
 		.where(eq(user.id, id))
 		.limit(1)
 	return existingUser.at(0) ?? null

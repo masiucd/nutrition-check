@@ -13,7 +13,7 @@
     "drizzle:generate": "pnpm drizzle-kit generate --config ./drizzle.config.ts",
     "drizzle:push": "pnpm drizzle-kit push --config ./drizzle.config.ts",
     "drizzle:pull": "pnpm drizzle-kit pull --config ./drizzle.config.ts",
-    "drizzle:migrate": "pnpm drizzle-kit migrate dev --config ./drizzle.config.ts"
+    "drizzle:migrate": "pnpm drizzle-kit migrate --config ./drizzle.config.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",

@@ -1,5 +1,7 @@
 import {createFileRoute, redirect} from "@tanstack/react-router"
+import {createServerFn} from "@tanstack/react-start"
 import {useState} from "react"
+import z from "zod/mini"
 import {PageWrapper} from "@/components/page_wrapper"
 import {Heading} from "@/components/typography"
 import {Button} from "@/components/ui/button"
@@ -15,6 +17,26 @@ import {
 } from "@/components/ui/dialog"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
+import {findUserById} from "@/utils/functions/user.server"
+
+const UpdateUserProfileSchema = z.object({
+	username: z.string().check(z.minLength(3), z.maxLength(50), z.trim()),
+	firstName: z.nullable(z.optional(z.string().check(z.minLength(3), z.maxLength(50), z.trim()))),
+	lastName: z.nullable(z.optional(z.string().check(z.minLength(3), z.maxLength(60), z.trim()))),
+	gender: z.nullable(z.optional(z.enum(["male", "female"]))),
+	age: z.nullable(z.optional(z.number().check(z.minimum(0), z.maximum(100)))),
+	userId: z.number(), // User ID that we send with a hidden input
+})
+
+const _updateUserProfile = createServerFn({method: "POST"})
+	.inputValidator(UpdateUserProfileSchema)
+	.handler(async ({data}) => {
+		// Check if user exists
+		const maybeUser = await findUserById(data.userId)
+		if (maybeUser === null) {
+			return {error: "User not found", data: null}
+		}
+	})
 
 export const Route = createFileRoute("/auth/profile")({
 	component: RouteComponent,
@@ -55,8 +77,20 @@ function RouteComponent() {
 							<Input id="username" name="username" defaultValue={ctx.user.username} />
 						</div>
 						<div className="flex flex-col gap-2">
-							<Label htmlFor="email">Email</Label>
-							<Input id="email" name="email" defaultValue={ctx.user.email} />
+							<Label htmlFor="age">Age</Label>
+							<Input id="age" name="age" defaultValue={ctx.user.age ?? ""} />
+						</div>
+						<div>
+							<Label>First Name</Label>
+							<Input id="firstName" name="firstName" defaultValue={ctx.user.firstName ?? ""} />
+						</div>
+						<div>
+							<Label>Last Name</Label>
+							<Input id="lastName" name="lastName" defaultValue={ctx.user.lastName ?? ""} />
+						</div>
+						<div>
+							<Label>Gender</Label>
+							<Input id="gender" name="gender" defaultValue={ctx.user.gender ?? ""} />
 						</div>
 						<div>
 							<Button type="submit">Save</Button>
