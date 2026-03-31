@@ -23,6 +23,7 @@ export async function findUserByEmail(email: string) {
 			lastName: userInfo.lastName,
 			age: userInfo.age,
 			gender: userInfo.gender,
+			password: user.passwordHash,
 		})
 		.from(user)
 		.leftJoin(userInfo, eq(user.id, userInfo.id))
@@ -76,4 +77,53 @@ export async function insertUser(userData: {username: string; email: string; pas
 		return result.at(0) ?? null
 	}
 	return null
+}
+
+interface UpdateUserRecord {
+	userId: number
+	username?: string
+	email?: string
+	firstName?: string
+	lastName?: string
+	age?: number
+	gender?: "female" | "male"
+}
+
+export async function updateUser(record: UpdateUserRecord) {
+	console.log(record)
+
+	const result = await db.transaction(async tx => {
+		const _userRows = await tx
+			.update(user)
+			.set({
+				username: record.username,
+				email: record.email,
+			})
+			.where(eq(user.id, record.userId))
+			.returning({
+				username: user.username,
+				email: user.email,
+			})
+		const _userInfosRows = await tx
+			.update(userInfo)
+			.set({
+				firstName: record.firstName,
+				lastName: record.lastName,
+				age: record.age,
+				gender: !record ? null : record.gender === "female" ? 1 : 0,
+			})
+			.where(eq(userInfo.id, record.userId))
+			.returning({
+				firstName: userInfo.firstName,
+				lastName: userInfo.lastName,
+				age: userInfo.age,
+				gender: userInfo.gender,
+			})
+
+		const updatedUser = _userRows.at(0) ?? null
+		const updatedUserInfo = _userInfosRows.at(0) ?? null
+		return updatedUser && updatedUserInfo ? {...updatedUser, ...updatedUserInfo} : null
+	})
+
+	return result
 }
