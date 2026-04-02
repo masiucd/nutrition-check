@@ -6,7 +6,7 @@
 
 import {eq} from "drizzle-orm"
 import {db} from "@/db/connect"
-import {user, userInfo} from "@/db/schema"
+import {gender, user, userInfo} from "@/db/schema"
 import type {Nullable} from "@/lib/types"
 
 /**
@@ -103,19 +103,38 @@ export async function updateUser(record: UpdateUserRecord) {
 				.returning({username: user.username, email: user.email}),
 
 			tx
-				.update(userInfo)
-				.set({
+				.insert(userInfo)
+				.values({
+					id: record.userId,
 					firstName: record.firstName ?? undefined,
 					lastName: record.lastName ?? undefined,
 					age: record.age ?? undefined,
-					gender: record.gender ?? undefined,
 				})
-				.where(eq(userInfo.id, record.userId))
+				.onConflictDoUpdate({
+					target: userInfo.id,
+					set: {
+						firstName: record.firstName ?? undefined,
+						lastName: record.lastName ?? undefined,
+						age: record.age ?? undefined,
+					},
+				})
 				.returning({
 					firstName: userInfo.firstName,
 					lastName: userInfo.lastName,
 					age: userInfo.age,
-					gender: userInfo.gender,
+				}),
+
+			tx
+				.insert(gender)
+				.values({
+					id: record.userId,
+					type: record.gender === 0 ? "FEMALE" : "MALE",
+				})
+				.onConflictDoUpdate({
+					target: record.userId,
+					set: {
+						type: record.gender === 0 ? "FEMALE" : "MALE",
+					},
 				}),
 		])
 

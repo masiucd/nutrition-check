@@ -24,7 +24,7 @@ export const userInfo = pgTable("user_info", {
 	firstName: varchar("first_name", {length: 100}),
 	lastName: varchar("last_name", {length: 100}),
 	age: integer(),
-	gender: integer().references(() => gender.id),
+	gender: integer().references(() => gender.id), // 0 - men 1 - women
 })
 
 /**

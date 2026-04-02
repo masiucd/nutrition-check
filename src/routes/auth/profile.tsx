@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
-import {findUserById} from "@/utils/functions/user.server"
+import {findUserById, updateUser} from "@/utils/functions/user.server"
 
 const UpdateUserProfileSchema = z.object({
 	username: z.string().check(z.minLength(3), z.maxLength(50), z.trim()),
@@ -36,6 +36,21 @@ const _updateUserProfile = createServerFn({method: "POST"})
 		if (maybeUser === null) {
 			return {error: "User not found", data: null}
 		}
+		// Steps to do when updating the user profile
+		const record = {
+			...maybeUser,
+			...data,
+		}
+		const _result = await updateUser({
+			userId: data.userId,
+			username: record.username,
+			firstName: record.firstName,
+			lastName: record.lastName,
+			age: record.age,
+			gender: record.gender !== null ? (record.gender === "female" ? 0 : 1) : null,
+		})
+
+		//
 	})
 
 export const Route = createFileRoute("/auth/profile")({
