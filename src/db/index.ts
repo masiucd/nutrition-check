@@ -1,0 +1,13 @@
+// src/db/index.ts
+// SERVER-ONLY — never import this in client components or routes directly.
+// Always access through createServerFn() handlers.
+import postgres from "postgres"
+import {env} from "@/env"
+
+const dbUrl = `postgresql://${env.DB_USER}:${env.DB_PASSWORD}@${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}`
+
+export const sql = postgres(dbUrl, {
+	max: 20,
+	idle_timeout: 30,
+	connect_timeout: 2,
+})
