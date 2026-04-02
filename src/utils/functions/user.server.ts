@@ -7,6 +7,7 @@
 import {eq} from "drizzle-orm"
 import {db} from "@/db/connect"
 import {user, userInfo} from "@/db/schema"
+import type {Nullable} from "@/lib/types"
 
 /**
  * Find a user by their email
@@ -81,49 +82,45 @@ export async function insertUser(userData: {username: string; email: string; pas
 
 interface UpdateUserRecord {
 	userId: number
-	username?: string
-	email?: string
-	firstName?: string
-	lastName?: string
-	age?: number
-	gender?: "female" | "male"
+	username: Nullable<string>
+	email: Nullable<string>
+	firstName: Nullable<string>
+	lastName: Nullable<string>
+	age: Nullable<number>
+	gender: Nullable<0 | 1> // 0 for female, 1 for male
 }
 
 export async function updateUser(record: UpdateUserRecord) {
-	console.log(record)
+	return await db.transaction(async tx => {
+		const [userRows, userInfoRows] = await Promise.all([
+			tx
+				.update(user)
+				.set({
+					username: record.username ?? undefined,
+					email: record.email ?? undefined,
+				})
+				.where(eq(user.id, record.userId))
+				.returning({username: user.username, email: user.email}),
 
-	const result = await db.transaction(async tx => {
-		const _userRows = await tx
-			.update(user)
-			.set({
-				username: record.username,
-				email: record.email,
-			})
-			.where(eq(user.id, record.userId))
-			.returning({
-				username: user.username,
-				email: user.email,
-			})
-		const _userInfosRows = await tx
-			.update(userInfo)
-			.set({
-				firstName: record.firstName,
-				lastName: record.lastName,
-				age: record.age,
-				gender: !record ? null : record.gender === "female" ? 1 : 0,
-			})
-			.where(eq(userInfo.id, record.userId))
-			.returning({
-				firstName: userInfo.firstName,
-				lastName: userInfo.lastName,
-				age: userInfo.age,
-				gender: userInfo.gender,
-			})
+			tx
+				.update(userInfo)
+				.set({
+					firstName: record.firstName ?? undefined,
+					lastName: record.lastName ?? undefined,
+					age: record.age ?? undefined,
+					gender: record.gender ?? undefined,
+				})
+				.where(eq(userInfo.id, record.userId))
+				.returning({
+					firstName: userInfo.firstName,
+					lastName: userInfo.lastName,
+					age: userInfo.age,
+					gender: userInfo.gender,
+				}),
+		])
 
-		const updatedUser = _userRows.at(0) ?? null
-		const updatedUserInfo = _userInfosRows.at(0) ?? null
+		const updatedUser = userRows.at(0) ?? null
+		const updatedUserInfo = userInfoRows.at(0) ?? null
 		return updatedUser && updatedUserInfo ? {...updatedUser, ...updatedUserInfo} : null
 	})
-
-	return result
 }

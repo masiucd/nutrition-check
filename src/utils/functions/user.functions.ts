@@ -49,18 +49,18 @@ export const loginUser = createServerFn({method: "POST"})
 			return {success: false, message: "Invalid credentials"} as const
 		}
 
-		const passwordMatch = await comparePassword(data.password, existingUser.passwordHash)
+		const passwordMatch = await comparePassword(data.password, existingUser.password)
 		if (!passwordMatch) {
 			return {success: false, message: "Invalid credentials"} as const
 		}
 
 		const session = await appSession()
 		// TODO create token
-		await session.update({userId: existingUser.id.toString()})
+		await session.update({userId: existingUser.userId.toString()})
 
 		return {
 			success: true,
-			user: {id: existingUser.id, username: existingUser.username, email: existingUser.email},
+			user: {id: existingUser.userId, username: existingUser.username, email: existingUser.email},
 		} as const
 	})
 
