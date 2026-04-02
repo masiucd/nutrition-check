@@ -9,6 +9,8 @@ const EnvSchema = z.object({
 	JWT_ACCESS_SECRET: z.string(),
 	JWT_REFRESH_SECRET: z.string(),
 	SESSION_SECRET: z.string(),
+	// Note: DATABASE_URL is not needed here — it is derived from the individual
+	// DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, and DB_NAME vars above inside connect.ts.
 	// Not used currently - implemented in the future
 	BETTER_AUTH_API_KEY: z.string(),
 

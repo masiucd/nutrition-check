@@ -1,27 +1,21 @@
-// import {SQL} from "bun"
-// import {env} from "../env"
+import {env} from "@/data/env"
+import {PrismaClient} from "@/generated/prisma"
 
-// // TODO use environment variables for connection string- use zod schema validation
+export const dbUrl = `postgresql://${env.DB_USER}:${env.DB_PASSWORD}@${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}`
 
-// const SqlString = `postgresql://${env.DB_USER}:${env.DB_PASSWORD}@${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}`
-// // const psql = new SQL("postgresql://root:root@localhost:5444/postgres")
-// const psql = new SQL(SqlString)
+// Use a global singleton to avoid creating multiple PrismaClient instances
+// during hot-module reload in development
+const globalForPrisma = global as unknown as {prisma: PrismaClient}
 
-// export {psql as sql}
+export const db =
+	globalForPrisma.prisma ??
+	new PrismaClient({
+		datasources: {
+			db: {url: dbUrl},
+		},
+		log: env.ENVIRONMENT === "development" ? ["query", "warn", "error"] : ["warn", "error"],
+	})
 
-// import "dotenv/config";
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
-import { env } from "@/data/env";
-
-// import 'dotenv/config';
-
-// const db = drizzle(process.env.DATABASE_URL!);
-
-export const dbUrl = `postgresql://${env.DB_USER}:${env.DB_PASSWORD}@${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}`;
-
-const pool = new Pool({
-	connectionString: dbUrl,
-});
-
-export const db = drizzle({ client: pool });
+if (env.ENVIRONMENT !== "production") {
+	globalForPrisma.prisma = db
+}

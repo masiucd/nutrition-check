@@ -12,7 +12,7 @@ interface User {
 	firstName: string | null
 	lastName: string | null
 	age: number | null
-	gender: number | null
+	gender: string | null
 }
 
 interface AuthContextType {

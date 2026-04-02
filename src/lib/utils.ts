@@ -27,7 +27,7 @@ export function isNonEmptyArray<T>(array: Array<T>): array is NonEmptyArray<T> {
 }
 
 // Strips keys whose value is `undefined`, leaving null-valued keys intact.
-// Drizzle only updates columns that appear in `.set()`, so this lets you
+// Useful when building partial update objects: lets you
 // distinguish "clear to null" (pass null) from "leave unchanged" (pass undefined).
 export function omitUndefined<T extends Record<string, unknown>>(obj: T) {
 	return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined)) as {
@@ -36,7 +36,7 @@ export function omitUndefined<T extends Record<string, unknown>>(obj: T) {
 }
 
 // Strips keys whose value is `null`, leaving undefined-valued keys intact.
-// Drizzle only updates columns that appear in `.set()`, so this lets you
+// Useful when building partial update objects: lets you
 // distinguish "clear to undefined" (pass undefined) from "leave unchanged" (pass null).
 export function omitNull<T extends Record<string, unknown>>(obj: T) {
 	return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== null)) as {

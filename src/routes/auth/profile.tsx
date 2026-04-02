@@ -1,7 +1,6 @@
 import {createFileRoute, redirect} from "@tanstack/react-router"
 import {createServerFn} from "@tanstack/react-start"
 import {useState} from "react"
-import z from "zod/mini"
 import {PageWrapper} from "@/components/page_wrapper"
 import {Heading} from "@/components/typography"
 import {Button} from "@/components/ui/button"
@@ -17,39 +16,37 @@ import {
 } from "@/components/ui/dialog"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
-import {findUserById, updateUser} from "@/utils/functions/user.server"
 
-const UpdateUserProfileSchema = z.object({
-	username: z.string().check(z.minLength(3), z.maxLength(50), z.trim()),
-	firstName: z.nullable(z.optional(z.string().check(z.minLength(3), z.maxLength(50), z.trim()))),
-	lastName: z.nullable(z.optional(z.string().check(z.minLength(3), z.maxLength(60), z.trim()))),
-	gender: z.nullable(z.optional(z.enum(["male", "female"]))),
-	age: z.nullable(z.optional(z.number().check(z.minimum(0), z.maximum(100)))),
-	userId: z.number(), // User ID that we send with a hidden input
-})
+// const UpdateUserProfileSchema = z.object({
+// 	username: z.string().check(z.minLength(3), z.maxLength(50), z.trim()),
+// 	firstName: z.nullable(z.optional(z.string().check(z.minLength(3), z.maxLength(50), z.trim()))),
+// 	lastName: z.nullable(z.optional(z.string().check(z.minLength(3), z.maxLength(60), z.trim()))),
+// 	gender: z.nullable(z.optional(z.enum(["male", "female"]))),
+// 	age: z.nullable(z.optional(z.number().check(z.minimum(0), z.maximum(100)))),
+// 	userId: z.number(), // User ID that we send with a hidden input
+// })
 
 const _updateUserProfile = createServerFn({method: "POST"})
-	.inputValidator(UpdateUserProfileSchema)
+	// .inputValidator(UpdateUserProfileSchema)
 	.handler(async ({data}) => {
 		// Check if user exists
-		const maybeUser = await findUserById(data.userId)
-		if (maybeUser === null) {
-			return {error: "User not found", data: null}
-		}
-		// Steps to do when updating the user profile
-		const record = {
-			...maybeUser,
-			...data,
-		}
-		const _result = await updateUser({
-			userId: data.userId,
-			username: record.username,
-			firstName: record.firstName,
-			lastName: record.lastName,
-			age: record.age,
-			gender: record.gender !== null ? (record.gender === "female" ? 0 : 1) : null,
-		})
-
+		// const maybeUser = await findUserById(data.userId)
+		// if (maybeUser === null) {
+		// 	return {error: "User not found", data: null}
+		// }
+		// // Steps to do when updating the user profile
+		// const _record = {
+		// 	...maybeUser,
+		// 	...data,
+		// }
+		// const _result = await updateUser({
+		// 	userId: data.userId,
+		// 	username: record.username,
+		// 	firstName: record.firstName,
+		// 	lastName: record.lastName,
+		// 	age: record.age,
+		// 	gender: record.gender !== null ? (record.gender === "female" ? 0 : 1) : null,
+		// })
 		//
 	})
 
@@ -113,7 +110,7 @@ function RouteComponent() {
 					</fieldset>
 				</form>
 				<EditPasswordDialog />
-				<MyOrders />
+				<MyCalorieLogs />
 				<SupportDialog />
 			</div>
 		</PageWrapper>
@@ -158,17 +155,17 @@ export function EditPasswordDialog() {
 	)
 }
 
-function MyOrders() {
+function MyCalorieLogs() {
 	return (
 		<div>
-			<h2>My Orders</h2>
-			<ul>
-				<li>Order 1</li>
-				<li>Order 2</li>
-				<li>Order 3</li>
-				<li>Ord...</li>
-			</ul>
-			<Button variant="link">View All Orders</Button>
+			<h2 className="font-semibold text-lg">Recent Logs</h2>
+			<p className="text-muted-foreground text-sm">
+				View your calorie logs on the{" "}
+				<a href="/" className="underline">
+					dashboard
+				</a>
+				.
+			</p>
 		</div>
 	)
 }

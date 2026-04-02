@@ -1,6 +1,6 @@
-# Sick Fits 🛒
+# Byte&Bite
 
-A modern e-commerce application built with cutting-edge web technologies.
+A modern calorie tracking application
 
 > ⚠️ **Work in Progress** - This project is currently under active development.
 
@@ -17,7 +17,7 @@ A modern e-commerce application built with cutting-edge web technologies.
 
 ### Backend & Database
 
-- **Drizzle ORM** - Type-safe SQL ORM
+- **Prisma ORM** - Type-safe database ORM
 - **PostgreSQL** - Relational database
 - **Zod** - Schema validation
 
@@ -47,7 +47,7 @@ pnpm install
 docker-compose up -d
 
 # Run database migrations
-pnpm drizzle:push
+pnpm prisma migrate dev
 
 # Start the development server
 pnpm dev
@@ -64,8 +64,8 @@ The app will be available at `http://localhost:3000`.
 | `pnpm preview`          | Preview production build                |
 | `pnpm test`             | Run tests                               |
 | `pnpm check`            | Run Biome linting and formatting checks |
-| `pnpm drizzle:generate` | Generate database migrations            |
-| `pnpm drizzle:push`     | Push schema changes to database         |
+| `pnpm prisma migrate dev` | Run Prisma migrations               |
+| `pnpm prisma generate`    | Generate Prisma client              |
 
 ## License
 

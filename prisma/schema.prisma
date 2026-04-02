@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Lookup table for gender options (e.g. MALE, FEMALE)
+model Gender {
+  id        Int        @id
+  type      String     @unique @db.VarChar(50)
+  userInfos UserInfo[]
+
+  @@map("gender")
+}
+
+/// Application user accounts
+model User {
+  id           Int          @id @default(autoincrement())
+  username     String       @unique @db.VarChar(255)
+  email        String       @unique @db.VarChar(255)
+  passwordHash String       @map("password_hash") @db.VarChar(512)
+  userInfo     UserInfo?
+  calorieLogs  CalorieLog[]
+
+  @@index([username], map: "username_idx")
+  @@index([email], map: "email_idx")
+  @@map("user")
+}
+
+/// Extended profile information for each user
+model UserInfo {
+  id        Int     @id
+  firstName String? @map("first_name") @db.VarChar(100)
+  lastName  String? @map("last_name") @db.VarChar(100)
+  age       Int?
+  genderId  Int?    @map("gender_id")
+
+  user   User    @relation(fields: [id], references: [id])
+  gender Gender? @relation(fields: [genderId], references: [id])
+
+  @@map("user_info")
+}
+
+/// Food items with nutritional information (repurposed from e-commerce products)
+model FoodItem {
+  id          Int    @id @default(autoincrement())
+  name        String @unique @db.VarChar(255)
+  description String @db.VarChar(1024)
+
+  /// Calories per serving size (kcal)
+  calories    Int     @default(0)
+  /// Protein per serving size (grams)
+  protein     Decimal @db.Decimal(10, 2)
+  /// Carbohydrates per serving size (grams)
+  carbs       Decimal @db.Decimal(10, 2)
+  /// Fat per serving size (grams)
+  fat         Decimal @db.Decimal(10, 2)
+  /// Default serving size in grams
+  servingSize Int     @default(100) @map("serving_size")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  calorieLogs CalorieLog[]
+
+  @@index([name], map: "food_item_name_idx")
+  @@map("food_item")
+}
+
+/// Tracks daily calorie intake: which user ate which food and how much
+model CalorieLog {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  foodItemId Int      @map("food_item_id")
+  /// Quantity consumed in grams
+  quantity   Decimal  @db.Decimal(10, 2)
+  loggedAt   DateTime @default(now()) @map("logged_at")
+
+  user     User     @relation(fields: [userId], references: [id])
+  foodItem FoodItem @relation(fields: [foodItemId], references: [id])
+
+  @@map("calorie_log")
+}
