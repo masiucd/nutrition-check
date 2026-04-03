@@ -4,10 +4,10 @@ import {Button} from "@/components/ui/button"
 import {sql} from "@/db"
 
 const fn = createServerFn({method: "GET"}).handler(async () => {
-	const r = await sql`
+	const rows = await sql<{id: number; text: string}[]>`
       SELECT * FROM test_data
     `
-	return r
+	return rows
 })
 
 export const Route = createFileRoute("/")({
@@ -19,8 +19,8 @@ export const Route = createFileRoute("/")({
 })
 
 function App() {
-	const _data = Route.useLoaderData()
-	console.log(_data)
+	const data = Route.useLoaderData()
+
 	return (
 		<div className="flex min-h-svh p-6">
 			<div className="flex min-w-0 max-w-md flex-col gap-4 text-sm leading-loose">
@@ -31,7 +31,7 @@ function App() {
 					<Button className="mt-2">Button</Button>
 				</div>
 				<ul>
-					{_data.map(x => (
+					{data.map(x => (
 						<li key={x.id}>{x.text}</li>
 					))}
 				</ul>
