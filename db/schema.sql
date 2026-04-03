@@ -124,6 +124,18 @@ CREATE TABLE public.users (
 
 
 --
+-- Name: users_data; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.users_data (
+    id integer NOT NULL,
+    data jsonb,
+    age integer,
+    gender boolean
+);
+
+
+--
 -- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -189,6 +201,14 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
+-- Name: users_data users_data_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users_data
+    ADD CONSTRAINT users_data_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -250,6 +270,14 @@ ALTER TABLE ONLY public.foods
 
 
 --
+-- Name: users_data users_data_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users_data
+    ADD CONSTRAINT users_data_id_fkey FOREIGN KEY (id) REFERENCES public.users(id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
@@ -261,4 +289,5 @@ ALTER TABLE ONLY public.foods
 --
 
 INSERT INTO public.schema_migrations (version) VALUES
-    ('20260402000000');
+    ('20260402000000'),
+    ('20260403102141');
