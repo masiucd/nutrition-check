@@ -1,5 +1,6 @@
 import {useForm} from "@tanstack/react-form"
-import {createFileRoute, Link} from "@tanstack/react-router"
+import {createFileRoute, Link, useNavigate} from "@tanstack/react-router"
+import {useState} from "react"
 import {z} from "zod"
 import {Button} from "@/components/ui/button"
 import {
@@ -12,23 +13,19 @@ import {
 } from "@/components/ui/card"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
+import {createUser} from "@/server/functions/user"
+import {HttpStatusCode} from "@/server/utils/status_code"
 
 const nameSchema = z
 	.string()
 	.min(1, "Name is required")
-	.min(2, "Name must be at least 2 characters")
+	.min(3, "Name must be at least 3 characters")
 
-const emailSchema = z
-	.string()
-	.min(1, "Email is required")
-	.email("Please enter a valid email address")
+const emailSchema = z.email("Please enter a valid email address").min(1, "Email is required")
 
-const passwordSchema = z
-	.string()
-	.min(1, "Password is required")
-	.min(8, "Password must be at least 8 characters")
+const passwordSchema = z.string().min(6, "Password must be at least 6 characters")
 
-const confirmPasswordSchema = z.string().min(1, "Please confirm your password")
+const confirmPasswordSchema = z.string().min(6, "Please confirm your password")
 
 function validate<T>(schema: z.ZodType<T>, value: T): string | undefined {
 	const result = schema.safeParse(value)
@@ -36,11 +33,42 @@ function validate<T>(schema: z.ZodType<T>, value: T): string | undefined {
 }
 
 function SignupPage() {
+	const [error, setError] = useState<string | undefined>()
+	const navigate = useNavigate()
 	const form = useForm({
 		defaultValues: {name: "", email: "", password: "", confirmPassword: ""},
 		onSubmit: async ({value}) => {
-			console.log(value)
+			console.log("value---> ", value)
+			const res = await createUser({
+				data: {
+					...value,
+				},
+			})
+			if (res.data !== null && res.status === HttpStatusCode.CREATED) {
+				// redirect to login page
+				navigate({to: "/login"})
+			} else {
+				// show notification for the user that the signup failed
+				setError(res.error)
+			}
+			console.log("res---> ", res)
 		},
+		// validators: {
+		// 	onSubmit: ({value}) => {
+		// 		const passwordValue = value.password
+		// 		const mismatch = value.confirmPassword !== passwordValue
+		// 		const hasError = mismatch
+		// 		return hasError ? "Passwords do not match" : undefined
+		// 	},
+		// 	onBlur: ({value}) => {
+		// 		const _name = value.name
+		// 		const _email = value.email
+		// 		const passwordValue = value.password
+		// 		const mismatch = value.confirmPassword !== passwordValue
+		// 		const _hasError = mismatch
+		// 		return false
+		// 	},
+		// },
 	})
 
 	return (
@@ -53,19 +81,21 @@ function SignupPage() {
 
 				<CardContent>
 					<form
-						onSubmit={(e) => {
+						onSubmit={e => {
 							e.preventDefault()
 							form.handleSubmit()
 						}}
-						noValidate
+						// noV
 						className="flex flex-col gap-4"
 					>
+						{error && (
+							<div className="rounded-md bg-destructive/15 p-3 text-destructive text-sm">
+								{error}
+							</div>
+						)}
 						{/* Name */}
-						<form.Field
-							name="name"
-							validators={{onChange: ({value}) => validate(nameSchema, value)}}
-						>
-							{(field) => (
+						<form.Field name="name" validators={{onBlur: ({value}) => validate(nameSchema, value)}}>
+							{field => (
 								<div className="flex flex-col gap-1.5">
 									<Label htmlFor="name">Name</Label>
 									<Input
@@ -75,18 +105,14 @@ function SignupPage() {
 										autoComplete="name"
 										value={field.state.value}
 										onBlur={field.handleBlur}
-										onChange={(e) => field.handleChange(e.target.value)}
-										aria-invalid={
-											field.state.meta.isTouched &&
-											field.state.meta.errors.length > 0
-										}
+										onChange={e => field.handleChange(e.target.value)}
+										aria-invalid={field.state.meta.isTouched && field.state.meta.errors.length > 0}
 									/>
-									{field.state.meta.isTouched &&
-										field.state.meta.errors.length > 0 && (
-											<p className="text-destructive text-xs" role="alert">
-												{field.state.meta.errors[0]}
-											</p>
-										)}
+									{field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
+										<p className="text-destructive text-xs" role="alert">
+											{field.state.meta.errors[0]}
+										</p>
+									)}
 								</div>
 							)}
 						</form.Field>
@@ -94,9 +120,9 @@ function SignupPage() {
 						{/* Email */}
 						<form.Field
 							name="email"
-							validators={{onChange: ({value}) => validate(emailSchema, value)}}
+							validators={{onBlur: ({value}) => validate(emailSchema, value)}}
 						>
-							{(field) => (
+							{field => (
 								<div className="flex flex-col gap-1.5">
 									<Label htmlFor="email">Email</Label>
 									<Input
@@ -106,18 +132,14 @@ function SignupPage() {
 										autoComplete="email"
 										value={field.state.value}
 										onBlur={field.handleBlur}
-										onChange={(e) => field.handleChange(e.target.value)}
-										aria-invalid={
-											field.state.meta.isTouched &&
-											field.state.meta.errors.length > 0
-										}
+										onChange={e => field.handleChange(e.target.value)}
+										aria-invalid={field.state.meta.isTouched && field.state.meta.errors.length > 0}
 									/>
-									{field.state.meta.isTouched &&
-										field.state.meta.errors.length > 0 && (
-											<p className="text-destructive text-xs" role="alert">
-												{field.state.meta.errors[0]}
-											</p>
-										)}
+									{field.state.meta.isBlurred && field.state.meta.errors.length > 0 && (
+										<p className="text-destructive text-xs" role="alert">
+											{field.state.meta.errors[0]}
+										</p>
+									)}
 								</div>
 							)}
 						</form.Field>
@@ -125,9 +147,9 @@ function SignupPage() {
 						{/* Password */}
 						<form.Field
 							name="password"
-							validators={{onChange: ({value}) => validate(passwordSchema, value)}}
+							validators={{onBlur: ({value}) => validate(passwordSchema, value)}}
 						>
-							{(field) => (
+							{field => (
 								<div className="flex flex-col gap-1.5">
 									<Label htmlFor="password">Password</Label>
 									<Input
@@ -137,18 +159,14 @@ function SignupPage() {
 										autoComplete="new-password"
 										value={field.state.value}
 										onBlur={field.handleBlur}
-										onChange={(e) => field.handleChange(e.target.value)}
-										aria-invalid={
-											field.state.meta.isTouched &&
-											field.state.meta.errors.length > 0
-										}
+										onChange={e => field.handleChange(e.target.value)}
+										aria-invalid={field.state.meta.isTouched && field.state.meta.errors.length > 0}
 									/>
-									{field.state.meta.isTouched &&
-										field.state.meta.errors.length > 0 && (
-											<p className="text-destructive text-xs" role="alert">
-												{field.state.meta.errors[0]}
-											</p>
-										)}
+									{field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
+										<p className="text-destructive text-xs" role="alert">
+											{field.state.meta.errors[0]}
+										</p>
+									)}
 								</div>
 							)}
 						</form.Field>
@@ -157,21 +175,19 @@ function SignupPage() {
 						<form.Field
 							name="confirmPassword"
 							validators={{
-								onChange: ({value}) => validate(confirmPasswordSchema, value),
+								onBlur: ({value}) => validate(confirmPasswordSchema, value),
 								onChangeListenTo: ["password"],
 								onBlurListenTo: ["password"],
 							}}
 						>
-							{(field) => {
+							{field => {
 								const passwordValue = form.getFieldValue("password")
 								const mismatch =
 									field.state.meta.isTouched &&
 									field.state.value.length > 0 &&
 									field.state.value !== passwordValue
 								const hasError =
-									(field.state.meta.isTouched &&
-										field.state.meta.errors.length > 0) ||
-									mismatch
+									(field.state.meta.isTouched && field.state.meta.errors.length > 0) || mismatch
 
 								return (
 									<div className="flex flex-col gap-1.5">
@@ -183,14 +199,12 @@ function SignupPage() {
 											autoComplete="new-password"
 											value={field.state.value}
 											onBlur={field.handleBlur}
-											onChange={(e) => field.handleChange(e.target.value)}
+											onChange={e => field.handleChange(e.target.value)}
 											aria-invalid={hasError}
 										/>
 										{hasError && (
 											<p className="text-destructive text-xs" role="alert">
-												{mismatch
-													? "Passwords do not match"
-													: field.state.meta.errors[0]}
+												{mismatch ? "Passwords do not match" : field.state.meta.errors[0]}
 											</p>
 										)}
 									</div>
@@ -198,16 +212,20 @@ function SignupPage() {
 							}}
 						</form.Field>
 
-						<form.Subscribe selector={(s) => s.isSubmitting}>
-							{(isSubmitting) => (
-								<Button
-									type="submit"
-									className="mt-1 w-full"
-									disabled={isSubmitting}
-								>
-									{isSubmitting ? "Creating account…" : "Create account"}
-								</Button>
-							)}
+						<form.Subscribe selector={s => [s.isSubmitting, s.canSubmit, s.values]}>
+							{([isSubmitting, canSubmit, values]) => {
+								const allValuesValid = Object.values(values).every(value => value !== "")
+								return (
+									<Button
+										type="submit"
+										className="mt-1 w-full"
+										disabled={!canSubmit && !allValuesValid}
+										variant={allValuesValid && canSubmit ? "default" : "blurred"}
+									>
+										{isSubmitting ? "Creating account…" : "Create account"}
+									</Button>
+								)
+							}}
 						</form.Subscribe>
 					</form>
 				</CardContent>

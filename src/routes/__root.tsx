@@ -1,7 +1,6 @@
 import {TanStackDevtools} from "@tanstack/react-devtools"
 import {createRootRoute, HeadContent, Scripts} from "@tanstack/react-router"
 import {TanStackRouterDevtoolsPanel} from "@tanstack/react-router-devtools"
-
 import appCss from "../styles.css?url"
 
 export const Route = createRootRoute({
@@ -15,7 +14,8 @@ export const Route = createRootRoute({
 				content: "width=device-width, initial-scale=1",
 			},
 			{
-				title: "TanStack Start Starter",
+				title: "Calorie tracker",
+				description: "Track your calories and stay healthy",
 			},
 		],
 		links: [
@@ -26,6 +26,14 @@ export const Route = createRootRoute({
 		],
 	}),
 	shellComponent: RootDocument,
+	beforeLoad: async ({context}) => {
+		// TODO Set  context with auth
+		console.log("Hello, World!")
+	},
+	notFoundComponent: props => {
+		console.log("not found props --> ", props)
+		return <p>...Not Found</p>
+	},
 })
 
 function RootDocument({children}: {children: React.ReactNode}) {

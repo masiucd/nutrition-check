@@ -13,15 +13,19 @@ import {
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
 
-const emailSchema = z
-	.string()
-	.min(1, "Email is required")
-	.email("Please enter a valid email address")
+export const Route = createFileRoute("/login")({
+	component: LoginPage,
+	beforeLoad: async ({context}) => {
+		console.log("context --> ", context)
+	},
+})
+
+const emailSchema = z.email("Please enter a valid email address").min(5, "Email is required")
 
 const passwordSchema = z
 	.string()
 	.min(1, "Password is required")
-	.min(8, "Password must be at least 8 characters")
+	.min(6, "Password must be at least 6 characters")
 
 function validate<T>(schema: z.ZodType<T>, value: T): string | undefined {
 	const result = schema.safeParse(value)
@@ -41,13 +45,11 @@ function LoginPage() {
 			<Card className="w-full max-w-sm shadow-lg">
 				<CardHeader className="space-y-1">
 					<CardTitle className="font-bold text-2xl tracking-tight">Sign in</CardTitle>
-					<CardDescription>
-						Enter your email and password to access your account
-					</CardDescription>
+					<CardDescription>Enter your email and password to access your account</CardDescription>
 				</CardHeader>
 
 				<form
-					onSubmit={(e) => {
+					onSubmit={e => {
 						e.preventDefault()
 						form.handleSubmit()
 					}}
@@ -57,9 +59,9 @@ function LoginPage() {
 						{/* Email */}
 						<form.Field
 							name="email"
-							validators={{onChange: ({value}) => validate(emailSchema, value)}}
+							validators={{onBlur: ({value}) => validate(emailSchema, value)}}
 						>
-							{(field) => (
+							{field => (
 								<div className="space-y-1.5">
 									<Label htmlFor="email">Email</Label>
 									<Input
@@ -69,18 +71,14 @@ function LoginPage() {
 										autoComplete="email"
 										value={field.state.value}
 										onBlur={field.handleBlur}
-										onChange={(e) => field.handleChange(e.target.value)}
-										aria-invalid={
-											field.state.meta.isTouched &&
-											field.state.meta.errors.length > 0
-										}
+										onChange={e => field.handleChange(e.target.value)}
+										aria-invalid={field.state.meta.isTouched && field.state.meta.errors.length > 0}
 									/>
-									{field.state.meta.isTouched &&
-										field.state.meta.errors.length > 0 && (
-											<p className="text-destructive text-sm" role="alert">
-												{field.state.meta.errors[0]}
-											</p>
-										)}
+									{field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
+										<p className="text-destructive text-sm" role="alert">
+											{field.state.meta.errors[0]}
+										</p>
+									)}
 								</div>
 							)}
 						</form.Field>
@@ -88,21 +86,18 @@ function LoginPage() {
 						{/* Password */}
 						<form.Field
 							name="password"
-							validators={{onChange: ({value}) => validate(passwordSchema, value)}}
+							validators={{onBlur: ({value}) => validate(passwordSchema, value)}}
 						>
-							{(field) => (
+							{field => (
 								<div className="space-y-1.5">
 									<div className="flex items-center justify-between">
 										<Label htmlFor="password">Password</Label>
-										<button
-											type="button"
-											onClick={() => {
-												/* TODO: forgot-password flow */
-											}}
+										<Link
+											to="/forgot_password"
 											className="text-muted-foreground text-sm underline-offset-4 hover:text-primary hover:underline"
 										>
 											Forgot password?
-										</button>
+										</Link>
 									</div>
 									<Input
 										id="password"
@@ -111,30 +106,30 @@ function LoginPage() {
 										autoComplete="current-password"
 										value={field.state.value}
 										onBlur={field.handleBlur}
-										onChange={(e) => field.handleChange(e.target.value)}
-										aria-invalid={
-											field.state.meta.isTouched &&
-											field.state.meta.errors.length > 0
-										}
+										onChange={e => field.handleChange(e.target.value)}
+										aria-invalid={field.state.meta.isTouched && field.state.meta.errors.length > 0}
 									/>
-									{field.state.meta.isTouched &&
-										field.state.meta.errors.length > 0 && (
-											<p className="text-destructive text-sm" role="alert">
-												{field.state.meta.errors[0]}
-											</p>
-										)}
+									{field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
+										<p className="text-destructive text-sm" role="alert">
+											{field.state.meta.errors[0]}
+										</p>
+									)}
 								</div>
 							)}
 						</form.Field>
 					</CardContent>
 
 					<CardFooter className="flex flex-col gap-4">
-						<form.Subscribe selector={(s) => s.isSubmitting}>
-							{(isSubmitting) => (
-								<Button type="submit" className="w-full" disabled={isSubmitting}>
-									{isSubmitting ? "Signing in…" : "Sign in"}
-								</Button>
-							)}
+						<form.Subscribe selector={s => [s.isSubmitting, s.values]}>
+							{([isSubmitting, values]) => {
+								console.log("values", values)
+								const _allFieldsNonEmpty = Object.values(values).every(f => f !== "")
+								return (
+									<Button type="submit" className="w-full" disabled={Boolean(isSubmitting)}>
+										{isSubmitting ? "Signing in…" : "Sign in"}
+									</Button>
+								)
+							}}
 						</form.Subscribe>
 						<p className="text-center text-muted-foreground text-sm">
 							Don't have an account?{" "}
@@ -151,7 +146,3 @@ function LoginPage() {
 		</div>
 	)
 }
-
-export const Route = createFileRoute("/login")({
-	component: LoginPage,
-})
