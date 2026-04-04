@@ -3,10 +3,11 @@ import {QueryClient, QueryClientProvider} from "@tanstack/react-query"
 import {ReactQueryDevtools} from "@tanstack/react-query-devtools"
 import {createRootRoute, HeadContent, Link, Scripts} from "@tanstack/react-router"
 import {TanStackRouterDevtoolsPanel} from "@tanstack/react-router-devtools"
+import {useServerFn} from "@tanstack/react-start"
 import type {PropsWithChildren} from "react"
 import {Button} from "@/components/ui/button"
 import {isNonNullable} from "@/lib/types"
-import {getCurrentUserFn} from "@/server/functions/user"
+import {getCurrentUserFn, logoutFn} from "@/server/functions/user"
 import appCss from "../styles.css?url"
 
 export const Route = createRootRoute({
@@ -53,6 +54,7 @@ const queryClient = new QueryClient()
 function RootDocument({children}: PropsWithChildren) {
 	const ctx = Route.useRouteContext()
 	const isAuthenticated = isNonNullable(ctx.user)
+	const logout = useServerFn(logoutFn)
 
 	return (
 		<html lang="en">
@@ -78,8 +80,8 @@ function RootDocument({children}: PropsWithChildren) {
 									<li>
 										<Button
 											variant="link"
-											onClick={() => {
-												//
+											onClick={async () => {
+												await logout()
 											}}
 										>
 											Logout
