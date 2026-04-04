@@ -1,6 +1,12 @@
 import {TanStackDevtools} from "@tanstack/react-devtools"
-import {createRootRoute, HeadContent, Scripts} from "@tanstack/react-router"
+import {QueryClient, QueryClientProvider} from "@tanstack/react-query"
+import {ReactQueryDevtools} from "@tanstack/react-query-devtools"
+import {createRootRoute, HeadContent, Link, Scripts} from "@tanstack/react-router"
 import {TanStackRouterDevtoolsPanel} from "@tanstack/react-router-devtools"
+import type {PropsWithChildren} from "react"
+import {Button} from "@/components/ui/button"
+import {isNonNullable} from "@/lib/types"
+import {getCurrentUserFn} from "@/server/functions/user"
 import appCss from "../styles.css?url"
 
 export const Route = createRootRoute({
@@ -26,24 +32,72 @@ export const Route = createRootRoute({
 		],
 	}),
 	shellComponent: RootDocument,
-	beforeLoad: async ({context}) => {
+	beforeLoad: async () => {
 		// TODO Set  context with auth
-		console.log("Hello, World!")
+		const user = await getCurrentUserFn()
+		if (!user) return {user: null}
+		return {
+			user: {
+				id: user.id,
+				email: user.email,
+			},
+		}
 	},
-	notFoundComponent: props => {
-		console.log("not found props --> ", props)
+	notFoundComponent: () => {
 		return <p>...Not Found</p>
 	},
 })
 
-function RootDocument({children}: {children: React.ReactNode}) {
+const queryClient = new QueryClient()
+
+function RootDocument({children}: PropsWithChildren) {
+	const ctx = Route.useRouteContext()
+	const isAuthenticated = isNonNullable(ctx.user)
+
 	return (
 		<html lang="en">
 			<head>
 				<HeadContent />
 			</head>
 			<body>
-				{children}
+				<header>
+					<nav>
+						<ul className="flex gap-2">
+							{!isAuthenticated && (
+								<>
+									<li>
+										<Link to="/login">Login</Link>
+									</li>
+									<li>
+										<Link to="/signup">Sign up</Link>
+									</li>
+								</>
+							)}
+							{isAuthenticated && (
+								<>
+									<li>
+										<Button
+											variant="link"
+											onClick={() => {
+												//
+											}}
+										>
+											Logout
+										</Button>
+									</li>
+									<li>
+										<Link to="/auth/profile">Profile</Link>
+									</li>
+								</>
+							)}
+						</ul>
+					</nav>
+				</header>
+				<QueryClientProvider client={queryClient}>
+					{children}
+
+					<ReactQueryDevtools initialIsOpen={false} />
+				</QueryClientProvider>
 				<TanStackDevtools
 					config={{
 						position: "bottom-right",
