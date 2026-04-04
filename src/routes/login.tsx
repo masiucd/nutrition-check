@@ -1,5 +1,6 @@
 import {useForm} from "@tanstack/react-form"
-import {createFileRoute, Link} from "@tanstack/react-router"
+import {createFileRoute, Link, redirect, useNavigate} from "@tanstack/react-router"
+import {useState} from "react"
 import {z} from "zod"
 import {Button} from "@/components/ui/button"
 import {
@@ -12,11 +13,15 @@ import {
 } from "@/components/ui/card"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
+import {loginUser} from "@/server/functions/user"
+import {HttpStatusCode} from "@/server/utils/status_code"
 
 export const Route = createFileRoute("/login")({
 	component: LoginPage,
 	beforeLoad: async ({context}) => {
-		console.log("context --> ", context)
+		if (context.user) {
+			redirect({to: "/auth/profile"})
+		}
 	},
 })
 
@@ -33,10 +38,18 @@ function validate<T>(schema: z.ZodType<T>, value: T): string | undefined {
 }
 
 function LoginPage() {
+	const [error, setError] = useState<string | null>(null)
+	const navigate = useNavigate()
 	const form = useForm({
 		defaultValues: {email: "", password: ""},
 		onSubmit: async ({value}) => {
-			console.log(value)
+			const response = await loginUser({data: value})
+
+			if (response.status === HttpStatusCode.OK && response.data !== null) {
+				navigate({to: "/auth/profile"})
+			} else {
+				setError(response.error)
+			}
 		},
 	})
 
@@ -55,6 +68,9 @@ function LoginPage() {
 					}}
 					noValidate
 				>
+					{error && (
+						<p className="rounded-md bg-destructive/15 p-3 text-destructive text-sm">{error}</p>
+					)}
 					<CardContent className="space-y-4">
 						{/* Email */}
 						<form.Field

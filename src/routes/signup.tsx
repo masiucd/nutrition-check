@@ -38,7 +38,6 @@ function SignupPage() {
 	const form = useForm({
 		defaultValues: {name: "", email: "", password: "", confirmPassword: ""},
 		onSubmit: async ({value}) => {
-			console.log("value---> ", value)
 			const res = await createUser({
 				data: {
 					...value,
