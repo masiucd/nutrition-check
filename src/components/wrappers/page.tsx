@@ -1,5 +1,21 @@
 import type {PropsWithChildren} from "react"
+import {cn} from "@/lib/utils"
 
-export function PageWrapper({children}: PropsWithChildren) {
-	return <section className="flex items-center justify-center bg-muted/40 px-4">{children}</section>
+interface Props {
+	className?: string
+	fluid?: boolean
+}
+
+export function PageWrapper({children, className, fluid}: PropsWithChildren<Props>) {
+	return (
+		<section
+			className={cn(
+				"mx-auto flex w-full max-w-7xl flex-1 items-center justify-center px-4",
+				className,
+				fluid ? "max-w-full" : null,
+			)}
+		>
+			{children}
+		</section>
+	)
 }

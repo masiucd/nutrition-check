@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
+import {PageWrapper} from "@/components/wrappers/page"
 import {createUser} from "@/server/functions/user"
 import {HttpStatusCode} from "@/server/utils/status_code"
 
@@ -50,7 +51,6 @@ function SignupPage() {
 				// show notification for the user that the signup failed
 				setError(res.error)
 			}
-			console.log("res---> ", res)
 		},
 		// validators: {
 		// 	onSubmit: ({value}) => {
@@ -71,7 +71,7 @@ function SignupPage() {
 	})
 
 	return (
-		<div className="flex min-h-svh items-center justify-center bg-background px-4 py-12">
+		<PageWrapper>
 			<Card className="w-full max-w-sm">
 				<CardHeader>
 					<CardTitle className="text-xl">Create an account</CardTitle>
@@ -239,7 +239,7 @@ function SignupPage() {
 					</Link>
 				</CardFooter>
 			</Card>
-		</div>
+		</PageWrapper>
 	)
 }
 

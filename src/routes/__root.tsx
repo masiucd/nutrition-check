@@ -71,7 +71,9 @@ function RootDocument({children}: PropsWithChildren) {
 					<header className="border border-blue-400">
 						<div className="mx-auto flex h-30 items-center md:max-w-7xl">
 							<strong className="font-bold no-underline md:mr-2">
-								<Link to="/">Calorie Tracker</Link>
+								<Link className="opacity-80 hover:opacity-100" to="/">
+									Calorie Tracker
+								</Link>
 							</strong>
 							<nav className="flex flex-1 border border-green-500">
 								<ul className="flex flex-1 justify-end gap-2 border-2 border-red-400">
@@ -112,10 +114,13 @@ function RootDocument({children}: PropsWithChildren) {
 function AuthenticatedNavLinks() {
 	const logout = useServerFn(logoutFn)
 	return (
-		<>
+		<div className="flex items-center gap-2">
+			<NavListItem>
+				<Link to="/auth/profile">Profile</Link>
+			</NavListItem>
 			<NavListItem>
 				<Button
-					variant="link"
+					variant="outline"
 					onClick={async () => {
 						await logout()
 					}}
@@ -123,10 +128,7 @@ function AuthenticatedNavLinks() {
 					Logout
 				</Button>
 			</NavListItem>
-			<NavListItem>
-				<Link to="/auth/profile">Profile</Link>
-			</NavListItem>
-		</>
+		</div>
 	)
 }
 

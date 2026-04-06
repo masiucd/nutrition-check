@@ -137,18 +137,22 @@ function LoginPage() {
 					</CardContent>
 
 					<CardFooter className="flex flex-col gap-4">
-						<form.Subscribe selector={s => [s.isSubmitting, s.values]}>
-							{([isSubmitting, values]) => {
-								console.log("values", values)
-								// TODO
-								const _allFieldsNonEmpty = Object.values(values).every(f => f !== "")
+						<form.Subscribe selector={s => [s.isSubmitting, s.canSubmit, s.values]}>
+							{([isSubmitting, canSubmit, values]) => {
+								const allValuesValid = Object.values(values).every(value => value !== "")
 								return (
-									<Button type="submit" className="w-full" disabled={Boolean(isSubmitting)}>
+									<Button
+										type="submit"
+										className="mt-1 w-full"
+										disabled={!canSubmit && !allValuesValid}
+										variant={allValuesValid && canSubmit ? "default" : "blurred"}
+									>
 										{isSubmitting ? "Signing in…" : "Sign in"}
 									</Button>
 								)
 							}}
 						</form.Subscribe>
+
 						<p className="text-center text-muted-foreground text-sm">
 							Don't have an account?{" "}
 							<Link
