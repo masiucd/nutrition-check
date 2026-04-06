@@ -1,12 +1,19 @@
 import {TanStackDevtools} from "@tanstack/react-devtools"
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query"
 import {ReactQueryDevtools} from "@tanstack/react-query-devtools"
-import {createRootRoute, HeadContent, Link, Scripts} from "@tanstack/react-router"
+import {
+	createRootRoute,
+	HeadContent,
+	Link,
+	type NotFoundRouteProps,
+	Scripts,
+} from "@tanstack/react-router"
 import {TanStackRouterDevtoolsPanel} from "@tanstack/react-router-devtools"
 import {useServerFn} from "@tanstack/react-start"
 import type {PropsWithChildren} from "react"
 import {Button} from "@/components/ui/button"
 import {isNonNullable} from "@/lib/types"
+import {cn} from "@/lib/utils"
 import {getCurrentUserFn, logoutFn} from "@/server/functions/user"
 import appCss from "../styles.css?url"
 
@@ -34,7 +41,6 @@ export const Route = createRootRoute({
 	}),
 	shellComponent: RootDocument,
 	beforeLoad: async () => {
-		// TODO Set  context with auth
 		const user = await getCurrentUserFn()
 		if (!user) return {user: null}
 		return {
@@ -44,8 +50,8 @@ export const Route = createRootRoute({
 			},
 		}
 	},
-	notFoundComponent: () => {
-		return <p>...Not Found</p>
+	notFoundComponent: props => {
+		return <NotFound {...props} />
 	},
 })
 
@@ -54,7 +60,6 @@ const queryClient = new QueryClient()
 function RootDocument({children}: PropsWithChildren) {
 	const ctx = Route.useRouteContext()
 	const isAuthenticated = isNonNullable(ctx.user)
-	const logout = useServerFn(logoutFn)
 
 	return (
 		<html lang="en">
@@ -62,42 +67,29 @@ function RootDocument({children}: PropsWithChildren) {
 				<HeadContent />
 			</head>
 			<body>
-				<header>
-					<nav>
-						<ul className="flex gap-2">
-							{!isAuthenticated && (
-								<>
-									<li>
-										<Link to="/login">Login</Link>
-									</li>
-									<li>
-										<Link to="/signup">Sign up</Link>
-									</li>
-								</>
-							)}
-							{isAuthenticated && (
-								<>
-									<li>
-										<Button
-											variant="link"
-											onClick={async () => {
-												await logout()
-											}}
-										>
-											Logout
-										</Button>
-									</li>
-									<li>
-										<Link to="/auth/profile">Profile</Link>
-									</li>
-								</>
-							)}
-						</ul>
-					</nav>
-				</header>
 				<QueryClientProvider client={queryClient}>
-					{children}
+					<header className="border border-blue-400">
+						<div className="mx-auto flex h-30 items-center md:max-w-7xl">
+							<strong className="font-bold no-underline md:mr-2">
+								<Link to="/">Calorie Tracker</Link>
+							</strong>
+							<nav className="flex flex-1 border border-green-500">
+								<ul className="flex flex-1 justify-end gap-2 border-2 border-red-400">
+									{!isAuthenticated && <UnauthenticatedNavLinks />}
+									{isAuthenticated && <AuthenticatedNavLinks />}
+								</ul>
+							</nav>
+						</div>
+					</header>
 
+					<main className="flex min-h-[calc(100svh-15rem)] flex-col">{children}</main>
+					<footer>
+						<div className="mx-auto flex h-30 items-center md:max-w-7xl">
+							Lorem ipsum dolor sit amet consectetur adipisicing elit. In ipsum corporis voluptas
+							impedit hic magnam nihil non omnis, quos inventore rerum veritatis doloremque,
+							perferendis mollitia iusto deserunt eius nisi labore.
+						</div>
+					</footer>
 					<ReactQueryDevtools initialIsOpen={false} />
 				</QueryClientProvider>
 				<TanStackDevtools
@@ -114,5 +106,56 @@ function RootDocument({children}: PropsWithChildren) {
 				<Scripts />
 			</body>
 		</html>
+	)
+}
+
+function AuthenticatedNavLinks() {
+	const logout = useServerFn(logoutFn)
+	return (
+		<>
+			<NavListItem>
+				<Button
+					variant="link"
+					onClick={async () => {
+						await logout()
+					}}
+				>
+					Logout
+				</Button>
+			</NavListItem>
+			<NavListItem>
+				<Link to="/auth/profile">Profile</Link>
+			</NavListItem>
+		</>
+	)
+}
+
+function UnauthenticatedNavLinks() {
+	return (
+		<>
+			<NavListItem>
+				<Link to="/login">Login</Link>
+			</NavListItem>
+			<NavListItem>
+				<Link to="/signup">Sign up</Link>
+			</NavListItem>
+		</>
+	)
+}
+
+// TODO - UI need to be implanted
+function NotFound(_props: NotFoundRouteProps) {
+	return <p>...Not Found</p>
+}
+function NavListItem(props: PropsWithChildren<{className?: string}>) {
+	return (
+		<li
+			className={cn(
+				"p-1 underline decoration-2 decoration-foreground/20 underline-offset-4 transition-all hover:decoration-foreground",
+				props.className,
+			)}
+		>
+			{props.children}
+		</li>
 	)
 }

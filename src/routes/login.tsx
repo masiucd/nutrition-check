@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
+import {PageWrapper} from "@/components/wrappers/page"
 import {loginUser} from "@/server/functions/user"
 import {HttpStatusCode} from "@/server/utils/status_code"
 
@@ -54,7 +55,7 @@ function LoginPage() {
 	})
 
 	return (
-		<div className="flex min-h-svh items-center justify-center bg-muted/40 px-4">
+		<PageWrapper>
 			<Card className="w-full max-w-sm shadow-lg">
 				<CardHeader className="space-y-1">
 					<CardTitle className="font-bold text-2xl tracking-tight">Sign in</CardTitle>
@@ -139,6 +140,7 @@ function LoginPage() {
 						<form.Subscribe selector={s => [s.isSubmitting, s.values]}>
 							{([isSubmitting, values]) => {
 								console.log("values", values)
+								// TODO
 								const _allFieldsNonEmpty = Object.values(values).every(f => f !== "")
 								return (
 									<Button type="submit" className="w-full" disabled={Boolean(isSubmitting)}>
@@ -159,6 +161,6 @@ function LoginPage() {
 					</CardFooter>
 				</form>
 			</Card>
-		</div>
+		</PageWrapper>
 	)
 }
