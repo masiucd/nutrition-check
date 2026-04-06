@@ -48,7 +48,8 @@
 				"useConst": "error"
 			},
 			"suspicious": {
-				"noExplicitAny": "warn"
+				"noExplicitAny": "warn",
+				"noConsole": "warn"
 			},
 			"nursery": {
 				"useSortedClasses": {
