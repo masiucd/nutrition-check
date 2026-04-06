@@ -9,7 +9,7 @@ export const Route = createFileRoute("/auth/_authed")({
 				search: {redirect: location.href},
 			})
 		}
-		// Pass user to child routes
+		// Pass user to child routes where they can access it via context
 		return {user: context.user}
 	},
 })

@@ -3,6 +3,7 @@ import {createServerFn} from "@tanstack/react-start"
 import {z} from "zod"
 import {usersDao} from "@/db"
 import {comparePassword, hashPassword} from "../utils/password.server"
+import {deleteUserFromCache, getUserFromCache, storeUserInCache} from "../utils/redis.server"
 import {getAppSession} from "../utils/session"
 import {HttpStatusCode} from "../utils/status_code"
 
@@ -74,6 +75,13 @@ export const loginUser = createServerFn({method: "POST"})
 			userId: user.id,
 		})
 
+		// Cache the user in Redis so subsequent lookups skip the DB
+		try {
+			await storeUserInCache({userId: user.id, user})
+		} catch (err) {
+			console.error("[Redis] Failed to cache user on login:", err)
+		}
+
 		return {
 			error: null,
 			data: user,
@@ -84,6 +92,17 @@ export const loginUser = createServerFn({method: "POST"})
 // Logout server function
 export const logoutFn = createServerFn({method: "POST"}).handler(async () => {
 	const session = await getAppSession()
+
+	// Invalidate the cached user before clearing the session
+	const userId = session.data.userId
+	if (userId) {
+		try {
+			await deleteUserFromCache(userId)
+		} catch (err) {
+			console.error("[Redis] Failed to invalidate user cache on logout:", err)
+		}
+	}
+
 	await session.clear()
 	throw redirect({to: "/login"})
 })
@@ -97,6 +116,28 @@ export const getCurrentUserFn = createServerFn({method: "GET"}).handler(async ()
 		return null
 	}
 
-	// This will do a DB call every time the user is fetched, can we optimize this? perhaps using a cache??
-	return await usersDao.findById(userId)
+	// Redis cache handles repeated lookups — only falls back to the DB on a miss or Redis error
+	try {
+		// const cached = await redis.get(getUserCacheKey(userId))
+		const cashedUser = await getUserFromCache(userId)
+		if (cashedUser !== null) {
+			// since cached data is already deserialised, we can return it directly , no need to hit the DB
+			return cashedUser
+		}
+	} catch (err) {
+		console.error("[Redis] Cache read failed, falling back to DB:", err)
+	}
+
+	// If cached data is not available, fall back to the DB
+	const user = await usersDao.findById(userId)
+
+	if (user) {
+		try {
+			await storeUserInCache({userId, user})
+		} catch (err) {
+			console.error("[Redis] Failed to cache user after DB fetch:", err)
+		}
+	}
+
+	return user
 })

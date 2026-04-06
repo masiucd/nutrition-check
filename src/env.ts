@@ -14,6 +14,8 @@ const EnvSchema = z.object({
 
 	// Local development vs production
 	ENVIRONMENT: z.string().default("development"),
+
+	REDIS_URL: z.string().default("redis://localhost:6379"),
 })
 
 const parsed = EnvSchema.safeParse(process.env)
