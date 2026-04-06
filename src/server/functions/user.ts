@@ -141,3 +141,82 @@ export const getCurrentUserFn = createServerFn({method: "GET"}).handler(async ()
 
 	return user
 })
+
+// Update user email
+const UpdateEmailSchema = z.object({
+	email: z.email("Please enter a valid email"),
+})
+
+export const updateUserEmailFn = createServerFn({method: "POST"})
+	.inputValidator(UpdateEmailSchema)
+	.handler(async ({data}) => {
+		const session = await getAppSession()
+		const userId = session.data.userId
+		if (!userId) {
+			return {error: "Not authenticated", status: HttpStatusCode.UNAUTHORIZED, data: null}
+		}
+
+		// Check the email is not already taken by another account
+		const existing = await usersDao.findByEmail(data.email)
+		if (existing && existing.id !== userId) {
+			return {error: "This email is already in use", status: HttpStatusCode.FORBIDDEN, data: null}
+		}
+
+		const updatedUser = await usersDao.updateEmail(userId, data.email)
+		if (!updatedUser) {
+			return {error: "Failed to update email", status: HttpStatusCode.BAD_REQUEST, data: null}
+		}
+
+		try {
+			await storeUserInCache({userId, user: updatedUser})
+		} catch (_err) {}
+
+		return {error: null, data: updatedUser, status: HttpStatusCode.OK}
+	})
+
+// Update user password
+const UpdatePasswordSchema = z.object({
+	currentPassword: z.string().min(1, "Current password is required"),
+	newPassword: z.string().min(6, "Password must be at least 6 characters"),
+	confirmPassword: z.string().min(6, "Please confirm your new password"),
+})
+
+export const updateUserPasswordFn = createServerFn({method: "POST"})
+	.inputValidator(UpdatePasswordSchema)
+	.handler(async ({data}) => {
+		const session = await getAppSession()
+		const userId = session.data.userId
+		if (!userId) {
+			return {error: "Not authenticated", status: HttpStatusCode.UNAUTHORIZED, data: null}
+		}
+
+		if (data.newPassword !== data.confirmPassword) {
+			return {error: "New passwords do not match", status: HttpStatusCode.BAD_REQUEST, data: null}
+		}
+
+		const user = await usersDao.findById(userId)
+		if (!user) {
+			return {error: "User not found", status: HttpStatusCode.BAD_REQUEST, data: null}
+		}
+
+		const passwordMatch = await comparePassword(data.currentPassword, user.password)
+		if (!passwordMatch) {
+			return {
+				error: "Current password is incorrect",
+				status: HttpStatusCode.UNAUTHORIZED,
+				data: null,
+			}
+		}
+
+		const hashedPassword = await hashPassword(data.newPassword)
+		const updatedUser = await usersDao.updatePassword(userId, hashedPassword)
+		if (!updatedUser) {
+			return {error: "Failed to update password", status: HttpStatusCode.BAD_REQUEST, data: null}
+		}
+
+		try {
+			await storeUserInCache({userId, user: updatedUser})
+		} catch (_err) {}
+
+		return {error: null, data: updatedUser, status: HttpStatusCode.OK}
+	})
