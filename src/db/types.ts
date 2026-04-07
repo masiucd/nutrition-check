@@ -36,3 +36,22 @@ export type DailyLogWithFood = DailyLog & {
 	food_name: string
 	unit_label: string
 }
+
+// Shape of the JSONB `data` column in users_data
+export type UserProfile = {
+	first_name?: string
+	last_name?: string
+	occupation?: string
+	height?: number // centimetres
+	weight?: number // kilograms
+	city?: string
+	country?: string
+}
+
+// Row type for the users_data table
+export type UserData = {
+	id: number // same as users.id (FK)
+	data: UserProfile | null
+	age: number | null
+	gender: boolean | null // false = male · true = female
+}

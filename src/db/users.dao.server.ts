@@ -60,4 +60,18 @@ export const usersDao = {
 		`
 		return rows[0] ?? null
 	},
+
+	/** Update a user's email address. Returns the updated row. */
+	async updateEmail(id: number, email: string): AwaitNullable<User> {
+		const rows = await sql<User[]>`
+			UPDATE users
+			SET email = ${email}
+			WHERE id = ${id}
+			RETURNING id,
+			  email,
+			  password,
+			  created_at
+		`
+		return rows[0] ?? null
+	},
 }
