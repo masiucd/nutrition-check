@@ -131,7 +131,14 @@ CREATE TABLE public.users_data (
     id integer NOT NULL,
     data jsonb,
     age integer,
-    gender boolean
+    gender boolean,
+    first_name character varying(50),
+    last_name character varying(50),
+    occupation character varying(50),
+    height numeric(5,2),
+    weight numeric(5,2),
+    city character varying(50),
+    country character varying(50)
 );
 
 
@@ -290,4 +297,5 @@ ALTER TABLE ONLY public.users_data
 
 INSERT INTO public.schema_migrations (version) VALUES
     ('20260402000000'),
-    ('20260403102141');
+    ('20260403102141'),
+    ('20260407115511');
