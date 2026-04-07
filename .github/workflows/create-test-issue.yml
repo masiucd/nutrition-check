@@ -1,0 +1,145 @@
+name: Create Test Suite Issue
+
+on:
+  push:
+    branches:
+      - copilot/create-tests-for-react-components
+
+jobs:
+  create-issue:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create issue for test suite
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'testing',
+            });
+
+            const alreadyExists = issues.some(i =>
+              i.title.includes('comprehensive test suite')
+            );
+
+            if (alreadyExists) {
+              console.log('Issue already exists, skipping creation.');
+              return;
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Add comprehensive test suite: React components, TypeScript, and database (DAO) layer',
+              labels: ['testing'],
+              body: `## Overview
+
+The project currently has **zero test files** despite having Vitest, \`@testing-library/react\`, and \`jsdom\` already installed as devDependencies. This issue tracks the work required to add a comprehensive test suite covering React components, TypeScript utilities, and the database (DAO) layer.
+
+## Current Tech Stack
+
+- **Framework**: React 19 + TypeScript (TanStack Start / TanStack Router)
+- **Test runner**: \`vitest\` (already installed)
+- **Component testing**: \`@testing-library/react\` + \`jsdom\` (already installed)
+- **Linter / Formatter**: Biome
+- **Database**: PostgreSQL via \`postgres\` driver + custom DAOs
+
+## Goals
+
+### 1. React Component Tests
+
+Write unit / integration tests for all UI components under \`src/components/\`:
+
+- \`components/ui/button.tsx\`
+- \`components/ui/card.tsx\`
+- \`components/ui/input.tsx\`
+- \`components/ui/label.tsx\`
+- \`components/typography.tsx\`
+- \`components/wrappers/\`
+
+Tools to use:
+- **Vitest** as the test runner
+- **@testing-library/react** for rendering and querying the DOM
+- **@testing-library/user-event** for realistic user interactions
+- **jsdom** as the DOM environment
+
+### 2. TypeScript Utility / Logic Tests
+
+Write pure unit tests for helper functions and server-side logic in:
+
+- \`src/lib/\`
+- \`src/env.ts\`
+- \`src/server/\`
+
+These should be fast, isolated tests with no DOM dependency (Node environment).
+
+### 3. Database / DAO Layer Tests
+
+Write integration tests for the DAO layer under \`src/db/\`:
+
+- \`daily_logs.dao.server.ts\`
+- \`foods.dao.server.ts\`
+- \`user_data.dao.server.ts\`
+- \`users.dao.server.ts\`
+
+Tools and approaches to consider:
+- **Vitest** with a real test database spun up via **Docker** (the project already has \`docker-compose.yaml\`)
+- **testcontainers** (\`testcontainers-node\`) for isolated, reproducible PostgreSQL containers per test run
+- **pg-mem** as a lightweight in-memory alternative for simple query tests
+- Use existing \`dbmate\` migrations to set up and tear down the schema between test runs
+
+### 4. Test Configuration
+
+- Add a \`vitest.config.ts\` (or extend \`vite.config.ts\`) with:
+  - \`environment: 'jsdom'\` for component tests
+  - \`environment: 'node'\` for database / server tests
+  - Path aliases matching \`tsconfig.json\`
+  - Coverage configuration (v8 or istanbul provider)
+- Add a \`src/test/setup.ts\` file for global test setup (e.g., \`@testing-library/react\` \`cleanup\` after each test)
+
+## Suggested File Structure
+
+\`\`\`
+src/
+  test/
+    setup.ts                        # global test setup
+  components/
+    ui/
+      button.test.tsx
+      card.test.tsx
+      input.test.tsx
+      label.test.tsx
+    typography.test.tsx
+  db/
+    users.dao.test.ts
+    foods.dao.test.ts
+    daily_logs.dao.test.ts
+    user_data.dao.test.ts
+  lib/
+    *.test.ts
+\`\`\`
+
+## Acceptance Criteria
+
+- [ ] At least one test per UI component (render, props, interactions)
+- [ ] At least one test per DAO (CRUD scenarios)
+- [ ] All tests pass with \`pnpm test\`
+- [ ] TypeScript compiles cleanly within test files (\`pnpm typecheck\`)
+- [ ] Coverage report is generated (\`pnpm test -- --coverage\`)
+- [ ] CI workflow (see issue #3) runs the test suite on every PR
+
+## References
+
+- [Vitest docs](https://vitest.dev/)
+- [@testing-library/react docs](https://testing-library.com/docs/react-testing-library/intro)
+- [testcontainers-node](https://node.testcontainers.org/)
+- [pg-mem](https://github.com/oguimbal/pg-mem)
+- [@testing-library/user-event](https://testing-library.com/docs/user-event/intro)
+`,
+            });
+
+            console.log('Issue created successfully!');
