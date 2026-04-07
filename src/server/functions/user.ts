@@ -1,7 +1,7 @@
 import {redirect} from "@tanstack/react-router"
 import {createServerFn} from "@tanstack/react-start"
 import {z} from "zod"
-import {usersDao} from "@/db"
+import {userDataDao, usersDao} from "@/db"
 import {comparePassword, hashPassword} from "../utils/password.server"
 import {deleteUserFromCache, getUserFromCache, storeUserInCache} from "../utils/redis.server"
 import {getAppSession} from "../utils/session"
@@ -78,9 +78,7 @@ export const loginUser = createServerFn({method: "POST"})
 		// Cache the user in Redis so subsequent lookups skip the DB
 		try {
 			await storeUserInCache({userId: user.id, user})
-		} catch (err) {
-			console.error("[Redis] Failed to cache user on login:", err)
-		}
+		} catch (_err) {}
 
 		return {
 			error: null,
@@ -98,9 +96,7 @@ export const logoutFn = createServerFn({method: "POST"}).handler(async () => {
 	if (userId) {
 		try {
 			await deleteUserFromCache(userId)
-		} catch (err) {
-			console.error("[Redis] Failed to invalidate user cache on logout:", err)
-		}
+		} catch (_err) {}
 	}
 
 	await session.clear()
@@ -124,9 +120,7 @@ export const getCurrentUserFn = createServerFn({method: "GET"}).handler(async ()
 			// since cached data is already deserialised, we can return it directly , no need to hit the DB
 			return cashedUser
 		}
-	} catch (err) {
-		console.error("[Redis] Cache read failed, falling back to DB:", err)
-	}
+	} catch (_err) {}
 
 	// If cached data is not available, fall back to the DB
 	const user = await usersDao.findById(userId)
@@ -134,9 +128,7 @@ export const getCurrentUserFn = createServerFn({method: "GET"}).handler(async ()
 	if (user) {
 		try {
 			await storeUserInCache({userId, user})
-		} catch (err) {
-			console.error("[Redis] Failed to cache user after DB fetch:", err)
-		}
+		} catch (_err) {}
 	}
 
 	return user
@@ -219,4 +211,57 @@ export const updateUserPasswordFn = createServerFn({method: "POST"})
 		} catch (_err) {}
 
 		return {error: null, data: updatedUser, status: HttpStatusCode.OK}
+	})
+
+// Get user profile data
+export const getUserProfileFn = createServerFn({method: "GET"}).handler(async () => {
+	const session = await getAppSession()
+	const userId = session.data.userId
+	if (!userId) {
+		return {error: "Not authenticated", data: null, status: HttpStatusCode.UNAUTHORIZED}
+	}
+	const data = await userDataDao.findById(userId)
+	return {error: null, data, status: HttpStatusCode.OK}
+})
+
+// Update user profile data
+const UpdateUserProfileSchema = z.object({
+	firstName: z.string().max(100).optional(),
+	lastName: z.string().max(100).optional(),
+	age: z.number().int().min(1).max(150).nullable().optional(),
+	gender: z.boolean().nullable().optional(),
+	occupation: z.string().max(200).optional(),
+	height: z.number().min(0).max(300).nullable().optional(),
+	weight: z.number().min(0).max(600).nullable().optional(),
+	city: z.string().max(100).optional(),
+	country: z.string().max(100).optional(),
+})
+
+export const updateUserProfileFn = createServerFn({method: "POST"})
+	.inputValidator(UpdateUserProfileSchema)
+	.handler(async ({data}) => {
+		const session = await getAppSession()
+		const userId = session.data.userId
+		if (!userId) {
+			return {error: "Not authenticated", data: null, status: HttpStatusCode.UNAUTHORIZED}
+		}
+
+		const updated = await userDataDao.upsert(userId, {
+			age: data.age ?? null,
+			gender: data.gender ?? null,
+			data: {
+				first_name: data.firstName,
+				last_name: data.lastName,
+				occupation: data.occupation,
+				height: data.height ?? undefined,
+				weight: data.weight ?? undefined,
+				city: data.city,
+				country: data.country,
+			},
+		})
+
+		if (!updated) {
+			return {error: "Failed to save profile", data: null, status: HttpStatusCode.BAD_REQUEST}
+		}
+		return {error: null, data: updated, status: HttpStatusCode.OK}
 	})
