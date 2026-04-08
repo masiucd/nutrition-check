@@ -249,15 +249,13 @@ export const updateUserProfileFn = createServerFn({method: "POST"})
 		const updated = await userDataDao.upsert(userId, {
 			age: data.age ?? null,
 			gender: data.gender ?? null,
-			data: {
-				first_name: data.firstName,
-				last_name: data.lastName,
-				occupation: data.occupation,
-				height: data.height ?? undefined,
-				weight: data.weight ?? undefined,
-				city: data.city,
-				country: data.country,
-			},
+			firstName: data.firstName,
+			lastName: data.lastName,
+			occupation: data.occupation,
+			height: data.height ?? null,
+			weight: data.weight ?? null,
+			city: data.city,
+			country: data.country,
 		})
 
 		if (!updated) {
