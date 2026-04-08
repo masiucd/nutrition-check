@@ -371,15 +371,15 @@ function PersonalDetailsForm({
 
 	const form = useForm({
 		defaultValues: {
-			firstName: initialData?.data?.first_name ?? "",
-			lastName: initialData?.data?.last_name ?? "",
+			firstName: initialData?.first_name ?? "",
+			lastName: initialData?.last_name ?? "",
 			age: initialData?.age != null ? String(initialData.age) : "",
 			gender: initialData?.gender === true ? "female" : initialData?.gender === false ? "male" : "",
-			occupation: initialData?.data?.occupation ?? "",
-			height: initialData?.data?.height != null ? String(initialData.data.height) : "",
-			weight: initialData?.data?.weight != null ? String(initialData.data.weight) : "",
-			city: initialData?.data?.city ?? "",
-			country: initialData?.data?.country ?? "",
+			occupation: initialData?.occupation ?? "",
+			height: initialData?.height != null ? String(initialData.height) : "",
+			weight: initialData?.weight != null ? String(initialData.weight) : "",
+			city: initialData?.city ?? "",
+			country: initialData?.country ?? "",
 		},
 		onSubmit: async ({value}) => {
 			setAlert(null)
@@ -711,8 +711,8 @@ function RouteComponent() {
 		)
 	}
 
-	const firstName = userData?.data?.first_name
-	const lastName = userData?.data?.last_name
+	const firstName = userData?.first_name ?? undefined
+	const lastName = userData?.last_name ?? undefined
 	const displayName = firstName || lastName ? [firstName, lastName].filter(Boolean).join(" ") : null
 	const initials = getInitials(currentEmail, firstName, lastName)
 	const memberSince = formatDate(fullUser.created_at)
