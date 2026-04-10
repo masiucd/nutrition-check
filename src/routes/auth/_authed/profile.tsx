@@ -47,6 +47,9 @@ export const Route = createFileRoute("/auth/_authed/profile")({
 		const [user, profileRes] = await Promise.all([getCurrentUserFn(), getUserProfileFn()])
 		return {user, userData: profileRes.data}
 	},
+	pendingComponent: () => {
+		return <div>...loading</div>
+	},
 })
 
 // ─── Zod Validators ───────────────────────────────────────────────────────────
