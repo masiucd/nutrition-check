@@ -1,5 +1,5 @@
 import {useForm} from "@tanstack/react-form"
-import {createFileRoute, Link, useNavigate} from "@tanstack/react-router"
+import {createFileRoute, Link, redirect, useNavigate} from "@tanstack/react-router"
 import {useState} from "react"
 import {z} from "zod"
 import {Button} from "@/components/ui/button"
@@ -245,4 +245,13 @@ function SignupPage() {
 
 export const Route = createFileRoute("/signup")({
 	component: SignupPage,
+	beforeLoad: ({context}) => {
+		const user = context.user
+		if (user) {
+			throw redirect({
+				to: "/auth/profile",
+			})
+		}
+		return {user}
+	},
 })
