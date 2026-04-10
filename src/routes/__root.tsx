@@ -5,13 +5,17 @@ import {
 	createRootRoute,
 	HeadContent,
 	Link,
+	type LinkProps,
 	type NotFoundRouteProps,
 	Scripts,
 } from "@tanstack/react-router"
 import {TanStackRouterDevtoolsPanel} from "@tanstack/react-router-devtools"
 import {useServerFn} from "@tanstack/react-start"
+import {Flame} from "lucide-react"
 import type {PropsWithChildren} from "react"
 import {Button} from "@/components/ui/button"
+import {appData} from "@/config"
+import {todayUtc} from "@/lib/date"
 import {isNonNullable} from "@/lib/types"
 import {cn} from "@/lib/utils"
 import {getCurrentUserFn, logoutFn} from "@/server/functions/user"
@@ -28,8 +32,8 @@ export const Route = createRootRoute({
 				content: "width=device-width, initial-scale=1",
 			},
 			{
-				title: "Calorie tracker",
-				description: "Track your calories and stay healthy",
+				title: appData.title,
+				description: appData.description,
 			},
 		],
 		links: [
@@ -57,6 +61,8 @@ export const Route = createRootRoute({
 
 const queryClient = new QueryClient()
 
+const today = todayUtc()
+
 function RootDocument({children}: PropsWithChildren) {
 	const ctx = Route.useRouteContext()
 	const isAuthenticated = isNonNullable(ctx.user)
@@ -72,7 +78,7 @@ function RootDocument({children}: PropsWithChildren) {
 						<div className="mx-auto flex h-30 items-center md:max-w-7xl">
 							<strong className="font-bold no-underline md:mr-2">
 								<Link className="opacity-80 hover:opacity-100" to="/">
-									Calorie Tracker
+									{appData.title}
 								</Link>
 							</strong>
 							<nav className="flex flex-1 border border-green-500">
@@ -85,11 +91,48 @@ function RootDocument({children}: PropsWithChildren) {
 					</header>
 
 					<main className="flex min-h-[calc(100svh-15rem)] flex-col">{children}</main>
-					<footer>
-						<div className="mx-auto flex h-30 items-center md:max-w-7xl">
-							Lorem ipsum dolor sit amet consectetur adipisicing elit. In ipsum corporis voluptas
-							impedit hic magnam nihil non omnis, quos inventore rerum veritatis doloremque,
-							perferendis mollitia iusto deserunt eius nisi labore.
+					<footer className="border-border border-t bg-muted/30">
+						<div className="mx-auto max-w-7xl px-6 py-12">
+							<div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
+								{/* Brand */}
+								<div className="flex flex-col gap-3">
+									<div className="flex items-center gap-2">
+										<Flame className="h-5 w-5 text-orange-500" />
+										<span className="font-semibold text-foreground">{appData.title}</span>
+									</div>
+									<p className="max-w-xs text-muted-foreground text-sm leading-relaxed">
+										{appData.description}
+									</p>
+								</div>
+
+								{/* Navigation */}
+								<div className="flex flex-col gap-3">
+									<h3 className="font-medium text-foreground text-sm">Navigation</h3>
+									<ul className="flex flex-col gap-2">
+										<FooterLink to="/">Home</FooterLink>
+										<FooterLink to="/login">Log in</FooterLink>
+										<FooterLink to="/signup">Sign up</FooterLink>
+									</ul>
+								</div>
+
+								{/* Features */}
+								<div className="flex flex-col gap-3">
+									<h3 className="font-medium text-foreground text-sm">What you can do</h3>
+									<ul className="flex flex-col gap-2 text-muted-foreground text-sm">
+										<li>Track daily calorie intake</li>
+										<li>Build a personal food library</li>
+										<li>Log meals by breakfast, lunch, dinner & snacks</li>
+										<li>Review nutrition data at a glance</li>
+									</ul>
+								</div>
+							</div>
+
+							<div className="mt-10 flex items-center justify-between border-border border-t pt-6">
+								<p className="text-muted-foreground text-xs">
+									© {today.year} {appData.title}. All rights reserved.
+								</p>
+								<p className="text-muted-foreground text-xs">Built for personal health tracking.</p>
+							</div>
 						</div>
 					</footer>
 					<ReactQueryDevtools initialIsOpen={false} />
@@ -149,6 +192,17 @@ function UnauthenticatedNavLinks() {
 function NotFound(_props: NotFoundRouteProps) {
 	return <p>...Not Found</p>
 }
+function FooterLink(props: LinkProps & PropsWithChildren) {
+	return (
+		<li className="list-none">
+			<Link
+				className="text-muted-foreground text-sm transition-colors hover:text-foreground"
+				{...props}
+			/>
+		</li>
+	)
+}
+
 function NavListItem(props: PropsWithChildren<{className?: string}>) {
 	return (
 		<li
