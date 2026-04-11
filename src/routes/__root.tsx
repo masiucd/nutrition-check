@@ -131,48 +131,60 @@ function AuthenticatedNavLinks({email}: {email: string}) {
 	const initial = email[0].toUpperCase()
 
 	return (
-		<div className="flex items-center gap-1">
-			<NavLink to="/auth/profile">
-				<div className="flex items-center gap-2">
-					<div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 font-medium text-primary text-xs">
-						{initial}
+		<ul className="flex items-center gap-1">
+			<li>
+				<NavLink to="/food_items">Food items</NavLink>
+			</li>
+			<li>
+				<NavLink to="/auth/profile">
+					<div className="flex items-center gap-2">
+						<div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 font-medium text-primary text-xs">
+							{initial}
+						</div>
+						<span>Profile</span>
 					</div>
-					<span>Profile</span>
-				</div>
-			</NavLink>
+				</NavLink>
+			</li>
 
-			<div className="mx-2 h-4 w-px bg-border" />
+			<li aria-hidden="true" className="mx-2 h-4 w-px bg-border" />
 
-			<Button
-				variant="ghost"
-				size="sm"
-				className="h-8 gap-1.5 text-muted-foreground hover:text-foreground"
-				onClick={async () => {
-					await logout()
-				}}
-			>
-				<LogOut className="h-3.5 w-3.5" />
-				Log out
-			</Button>
-		</div>
+			<li>
+				<Button
+					variant="ghost"
+					size="sm"
+					className="h-8 gap-1.5 text-muted-foreground hover:text-foreground"
+					onClick={async () => {
+						await logout()
+					}}
+				>
+					<LogOut className="h-3.5 w-3.5" />
+					Log out
+				</Button>
+			</li>
+		</ul>
 	)
 }
 
 function UnauthenticatedNavLinks() {
 	return (
-		<div className="flex items-center gap-1">
-			<NavLink to="/login">
-				<div className="flex items-center gap-1.5">
-					<UserIcon className="h-3.5 w-3.5" />
-					Log in
-				</div>
-			</NavLink>
-			<div className="ml-2">
+		<ul className="flex items-center gap-1">
+			<li>
+				<NavLink to="/food_items">Food items</NavLink>
+			</li>
+			<li>
+				<NavLink to="/login">
+					<div className="flex items-center gap-1.5">
+						<UserIcon className="h-3.5 w-3.5" />
+						Log in
+					</div>
+				</NavLink>
+			</li>
+			<li className="ml-2">
 				<Button asChild size="sm" className="h-8">
 					<Link to="/signup">Sign up</Link>
 				</Button>
-			</div>
-		</div>
+			</li>
+		</ul>
 	)
 }
 
@@ -252,7 +264,7 @@ function NavLink(props: LinkProps & PropsWithChildren) {
 	)
 }
 
-function Footer() {
+function Footer(props: {user: User | null}) {
 	return (
 		<footer className="border-border border-t bg-muted/30">
 			<div className="mx-auto max-w-7xl px-6 py-12">
@@ -273,8 +285,15 @@ function Footer() {
 						<h3 className="font-medium text-foreground text-sm">Navigation</h3>
 						<ul className="flex flex-col gap-2">
 							<FooterLink to="/">Home</FooterLink>
-							<FooterLink to="/login">Log in</FooterLink>
-							<FooterLink to="/signup">Sign up</FooterLink>
+							{/*TODO only if not logged in*/}
+							{props.user === null ? (
+								<>
+									<FooterLink to="/login">Log in</FooterLink>
+									<FooterLink to="/signup">Sign up</FooterLink>
+								</>
+							) : (
+								<FooterLink to="/auth/profile">Profile</FooterLink>
+							)}
 						</ul>
 					</div>
 
