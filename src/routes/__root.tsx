@@ -8,10 +8,11 @@ import {
 	type LinkProps,
 	type NotFoundRouteProps,
 	Scripts,
+	useRouterState,
 } from "@tanstack/react-router"
 import {TanStackRouterDevtoolsPanel} from "@tanstack/react-router-devtools"
 import {useServerFn} from "@tanstack/react-start"
-import {Flame} from "lucide-react"
+import {Flame, LogOut, User} from "lucide-react"
 import type {PropsWithChildren} from "react"
 import {Button} from "@/components/ui/button"
 import {appData} from "@/config"
@@ -74,18 +75,22 @@ function RootDocument({children}: PropsWithChildren) {
 			</head>
 			<body>
 				<QueryClientProvider client={queryClient}>
-					<header className="border border-blue-400">
-						<div className="mx-auto flex h-30 items-center md:max-w-7xl">
-							<strong className="font-bold no-underline md:mr-2">
-								<Link className="opacity-80 hover:opacity-100" to="/">
+					<header className="sticky top-0 z-50 border-border/50 border-b bg-background/90 backdrop-blur-md">
+						<div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+							{/* Brand */}
+							<Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+								<div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+									<Flame className="h-4 w-4 text-orange-500" />
+								</div>
+								<span className="font-semibold text-foreground text-sm tracking-tight">
 									{appData.title}
-								</Link>
-							</strong>
-							<nav className="flex flex-1 border border-green-500">
-								<ul className="flex flex-1 justify-end gap-2 border-2 border-red-400">
-									{!isAuthenticated && <UnauthenticatedNavLinks />}
-									{isAuthenticated && <AuthenticatedNavLinks />}
-								</ul>
+								</span>
+							</Link>
+
+							{/* Nav */}
+							<nav>
+								{!isAuthenticated && <UnauthenticatedNavLinks />}
+								{isAuthenticated && <AuthenticatedNavLinks email={ctx.user?.email} />}
 							</nav>
 						</div>
 					</header>
@@ -154,37 +159,54 @@ function RootDocument({children}: PropsWithChildren) {
 	)
 }
 
-function AuthenticatedNavLinks() {
+function AuthenticatedNavLinks({email}: {email?: string | null}) {
 	const logout = useServerFn(logoutFn)
+	const initial = email?.[0]?.toUpperCase() ?? "?"
+
 	return (
-		<div className="flex items-center gap-2">
-			<NavListItem>
-				<Link to="/auth/profile">Profile</Link>
-			</NavListItem>
-			<NavListItem>
-				<Button
-					variant="outline"
-					onClick={async () => {
-						await logout()
-					}}
-				>
-					Logout
-				</Button>
-			</NavListItem>
+		<div className="flex items-center gap-1">
+			<NavLink to="/auth/profile">
+				<div className="flex items-center gap-2">
+					<div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 font-medium text-primary text-xs">
+						{initial}
+					</div>
+					<span>Profile</span>
+				</div>
+			</NavLink>
+
+			<div className="mx-2 h-4 w-px bg-border" />
+
+			<Button
+				variant="ghost"
+				size="sm"
+				className="h-8 gap-1.5 text-muted-foreground hover:text-foreground"
+				onClick={async () => {
+					await logout()
+				}}
+			>
+				<LogOut className="h-3.5 w-3.5" />
+				Log out
+			</Button>
 		</div>
 	)
 }
 
 function UnauthenticatedNavLinks() {
 	return (
-		<>
-			<NavListItem>
-				<Link to="/login">Login</Link>
-			</NavListItem>
-			<NavListItem>
-				<Link to="/signup">Sign up</Link>
-			</NavListItem>
-		</>
+		<div className="flex items-center gap-1">
+			<NavLink to="/login">
+				<div className="flex items-center gap-1.5">
+					<User className="h-3.5 w-3.5" />
+					Log in
+				</div>
+			</NavLink>
+
+			<div className="ml-2">
+				<Button asChild size="sm" className="h-8">
+					<Link to="/signup">Sign up</Link>
+				</Button>
+			</div>
+		</div>
 	)
 }
 
@@ -192,6 +214,26 @@ function UnauthenticatedNavLinks() {
 function NotFound(_props: NotFoundRouteProps) {
 	return <p>...Not Found</p>
 }
+
+function NavLink(props: LinkProps & PropsWithChildren) {
+	const pathname = useRouterState({select: s => s.location.pathname})
+	const isActive =
+		typeof props.to === "string" &&
+		(props.to === "/" ? pathname === "/" : pathname.startsWith(props.to))
+
+	return (
+		<Link
+			className={cn(
+				"flex items-center rounded-md px-3 py-1.5 text-sm transition-colors",
+				isActive
+					? "bg-accent font-medium text-accent-foreground"
+					: "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+			)}
+			{...props}
+		/>
+	)
+}
+
 function FooterLink(props: LinkProps & PropsWithChildren) {
 	return (
 		<li className="list-none">
@@ -199,19 +241,6 @@ function FooterLink(props: LinkProps & PropsWithChildren) {
 				className="text-muted-foreground text-sm transition-colors hover:text-foreground"
 				{...props}
 			/>
-		</li>
-	)
-}
-
-function NavListItem(props: PropsWithChildren<{className?: string}>) {
-	return (
-		<li
-			className={cn(
-				"p-1 underline decoration-2 decoration-foreground/20 underline-offset-4 transition-all hover:decoration-foreground",
-				props.className,
-			)}
-		>
-			{props.children}
 		</li>
 	)
 }
