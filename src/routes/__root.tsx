@@ -12,15 +12,19 @@ import {
 } from "@tanstack/react-router"
 import {TanStackRouterDevtoolsPanel} from "@tanstack/react-router-devtools"
 import {useServerFn} from "@tanstack/react-start"
-import {Flame, LogOut, User} from "lucide-react"
+import {Flame, LogOut, UserIcon} from "lucide-react"
 import type {PropsWithChildren} from "react"
 import {Button} from "@/components/ui/button"
 import {appData} from "@/config"
 import {todayUtc} from "@/lib/date"
-import {isNonNullable} from "@/lib/types"
 import {cn} from "@/lib/utils"
 import {getCurrentUserFn, logoutFn} from "@/server/functions/user"
 import appCss from "../styles.css?url"
+
+interface User {
+	id: number
+	email: string
+}
 
 export const Route = createRootRoute({
 	head: () => ({
@@ -52,7 +56,7 @@ export const Route = createRootRoute({
 			user: {
 				id: user.id,
 				email: user.email,
-			},
+			} satisfies User,
 		}
 	},
 	notFoundComponent: props => {
@@ -66,7 +70,6 @@ const today = todayUtc()
 
 function RootDocument({children}: PropsWithChildren) {
 	const ctx = Route.useRouteContext()
-	const isAuthenticated = isNonNullable(ctx.user)
 
 	return (
 		<html lang="en">
@@ -75,71 +78,9 @@ function RootDocument({children}: PropsWithChildren) {
 			</head>
 			<body>
 				<QueryClientProvider client={queryClient}>
-					<header className="sticky top-0 z-50 border-border/50 border-b bg-background/90 backdrop-blur-md">
-						<div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-							{/* Brand */}
-							<Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-								<div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-									<Flame className="h-4 w-4 text-orange-500" />
-								</div>
-								<span className="font-semibold text-foreground text-sm tracking-tight">
-									{appData.title}
-								</span>
-							</Link>
-
-							{/* Nav */}
-							<nav>
-								{!isAuthenticated && <UnauthenticatedNavLinks />}
-								{isAuthenticated && <AuthenticatedNavLinks email={ctx.user?.email} />}
-							</nav>
-						</div>
-					</header>
-
+					<Header user={ctx.user} />
 					<main className="flex min-h-[calc(100svh-15rem)] flex-col">{children}</main>
-					<footer className="border-border border-t bg-muted/30">
-						<div className="mx-auto max-w-7xl px-6 py-12">
-							<div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
-								{/* Brand */}
-								<div className="flex flex-col gap-3">
-									<div className="flex items-center gap-2">
-										<Flame className="h-5 w-5 text-orange-500" />
-										<span className="font-semibold text-foreground">{appData.title}</span>
-									</div>
-									<p className="max-w-xs text-muted-foreground text-sm leading-relaxed">
-										{appData.description}
-									</p>
-								</div>
-
-								{/* Navigation */}
-								<div className="flex flex-col gap-3">
-									<h3 className="font-medium text-foreground text-sm">Navigation</h3>
-									<ul className="flex flex-col gap-2">
-										<FooterLink to="/">Home</FooterLink>
-										<FooterLink to="/login">Log in</FooterLink>
-										<FooterLink to="/signup">Sign up</FooterLink>
-									</ul>
-								</div>
-
-								{/* Features */}
-								<div className="flex flex-col gap-3">
-									<h3 className="font-medium text-foreground text-sm">What you can do</h3>
-									<ul className="flex flex-col gap-2 text-muted-foreground text-sm">
-										<li>Track daily calorie intake</li>
-										<li>Build a personal food library</li>
-										<li>Log meals by breakfast, lunch, dinner & snacks</li>
-										<li>Review nutrition data at a glance</li>
-									</ul>
-								</div>
-							</div>
-
-							<div className="mt-10 flex items-center justify-between border-border border-t pt-6">
-								<p className="text-muted-foreground text-xs">
-									© {today.year} {appData.title}. All rights reserved.
-								</p>
-								<p className="text-muted-foreground text-xs">Built for personal health tracking.</p>
-							</div>
-						</div>
-					</footer>
+					<Footer />
 					<ReactQueryDevtools initialIsOpen={false} />
 				</QueryClientProvider>
 				<TanStackDevtools
@@ -159,9 +100,35 @@ function RootDocument({children}: PropsWithChildren) {
 	)
 }
 
-function AuthenticatedNavLinks({email}: {email?: string | null}) {
+function Header(props: {user: User | null}) {
+	return (
+		<header className="sticky top-0 z-50 border-border/50 border-b bg-background/90 backdrop-blur-md">
+			<div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+				{/* Brand */}
+				<Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+					<div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+						<Flame className="h-4 w-4 text-orange-500" />
+					</div>
+					<span className="font-semibold text-foreground text-sm tracking-tight">
+						{appData.title}
+					</span>
+				</Link>
+				<nav>
+					<NavLinks user={props.user} />
+				</nav>
+			</div>
+		</header>
+	)
+}
+
+function NavLinks(props: {user: User | null}) {
+	if (!props.user) return <UnauthenticatedNavLinks />
+	return <AuthenticatedNavLinks email={props.user.email} />
+}
+
+function AuthenticatedNavLinks({email}: {email: string}) {
 	const logout = useServerFn(logoutFn)
-	const initial = email?.[0]?.toUpperCase() ?? "?"
+	const initial = email[0].toUpperCase()
 
 	return (
 		<div className="flex items-center gap-1">
@@ -196,11 +163,10 @@ function UnauthenticatedNavLinks() {
 		<div className="flex items-center gap-1">
 			<NavLink to="/login">
 				<div className="flex items-center gap-1.5">
-					<User className="h-3.5 w-3.5" />
+					<UserIcon className="h-3.5 w-3.5" />
 					Log in
 				</div>
 			</NavLink>
-
 			<div className="ml-2">
 				<Button asChild size="sm" className="h-8">
 					<Link to="/signup">Sign up</Link>
@@ -210,9 +176,61 @@ function UnauthenticatedNavLinks() {
 	)
 }
 
-// TODO - UI need to be implanted
 function NotFound(_props: NotFoundRouteProps) {
-	return <p>...Not Found</p>
+	return (
+		<div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-8 px-6 py-24 text-center">
+			{/* Large muted 404 */}
+			<div className="relative select-none">
+				<span className="font-bold text-[10rem] text-border leading-none tracking-tighter">
+					404
+				</span>
+				<div className="absolute inset-0 flex items-center justify-center">
+					<div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted shadow-sm">
+						<Flame className="h-8 w-8 text-orange-400" />
+					</div>
+				</div>
+			</div>
+
+			{/* Copy */}
+			<div className="flex flex-col gap-3">
+				<h1 className="font-semibold text-2xl text-foreground tracking-tight">Page not found</h1>
+				<p className="max-w-md text-muted-foreground leading-relaxed">
+					The page you're looking for doesn't exist or may have been moved. Double-check the URL, or
+					head back to a place you know.
+				</p>
+			</div>
+
+			{/* Actions */}
+			<div className="flex flex-wrap items-center justify-center gap-3">
+				<Button asChild size="lg">
+					<Link to="/">Go to home</Link>
+				</Button>
+				<Button variant="outline" size="lg" onClick={() => window.history.back()}>
+					Go back
+				</Button>
+			</div>
+
+			{/* Quick links */}
+			<div className="flex flex-col items-center gap-3">
+				<p className="text-muted-foreground text-sm">Or jump to one of these:</p>
+				<div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+					{[
+						{to: "/login" as const, label: "Log in"},
+						{to: "/signup" as const, label: "Sign up"},
+						{to: "/auth/profile" as const, label: "Profile"},
+					].map(({to, label}) => (
+						<Link
+							key={to}
+							to={to}
+							className="text-primary text-sm underline decoration-primary/30 underline-offset-4 transition-colors hover:decoration-primary"
+						>
+							{label}
+						</Link>
+					))}
+				</div>
+			</div>
+		</div>
+	)
 }
 
 function NavLink(props: LinkProps & PropsWithChildren) {
@@ -231,6 +249,55 @@ function NavLink(props: LinkProps & PropsWithChildren) {
 			)}
 			{...props}
 		/>
+	)
+}
+
+function Footer() {
+	return (
+		<footer className="border-border border-t bg-muted/30">
+			<div className="mx-auto max-w-7xl px-6 py-12">
+				<div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
+					{/* Brand */}
+					<div className="flex flex-col gap-3">
+						<div className="flex items-center gap-2">
+							<Flame className="h-5 w-5 text-orange-500" />
+							<span className="font-semibold text-foreground">{appData.title}</span>
+						</div>
+						<p className="max-w-xs text-muted-foreground text-sm leading-relaxed">
+							{appData.description}
+						</p>
+					</div>
+
+					{/* Navigation */}
+					<div className="flex flex-col gap-3">
+						<h3 className="font-medium text-foreground text-sm">Navigation</h3>
+						<ul className="flex flex-col gap-2">
+							<FooterLink to="/">Home</FooterLink>
+							<FooterLink to="/login">Log in</FooterLink>
+							<FooterLink to="/signup">Sign up</FooterLink>
+						</ul>
+					</div>
+
+					{/* Features */}
+					<div className="flex flex-col gap-3">
+						<h3 className="font-medium text-foreground text-sm">What you can do</h3>
+						<ul className="flex flex-col gap-2 text-muted-foreground text-sm">
+							<li>Track daily calorie intake</li>
+							<li>Build a personal food library</li>
+							<li>Log meals by breakfast, lunch, dinner & snacks</li>
+							<li>Review nutrition data at a glance</li>
+						</ul>
+					</div>
+				</div>
+
+				<div className="mt-10 flex items-center justify-between border-border border-t pt-6">
+					<p className="text-muted-foreground text-xs">
+						© {today.year} {appData.title}. All rights reserved.
+					</p>
+					<p className="text-muted-foreground text-xs">Built for personal health tracking.</p>
+				</div>
+			</div>
+		</footer>
 	)
 }
 
