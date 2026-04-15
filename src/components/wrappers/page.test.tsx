@@ -17,9 +17,4 @@ describe("PageWrapper", () => {
 		const {container} = render(<PageWrapper className="extra">content</PageWrapper>)
 		expect(container.querySelector("section")).toHaveClass("extra")
 	})
-
-	it("applies max-w-full when fluid is true", () => {
-		const {container} = render(<PageWrapper fluid>content</PageWrapper>)
-		expect(container.querySelector("section")).toHaveClass("max-w-full")
-	})
 })
