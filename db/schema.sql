@@ -58,14 +58,79 @@ ALTER SEQUENCE public.daily_logs_id_seq OWNED BY public.daily_logs.id;
 
 
 --
+-- Name: food_categories; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.food_categories (
+    id integer NOT NULL,
+    name text NOT NULL
+);
+
+
+--
+-- Name: food_categories_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.food_categories_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: food_categories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.food_categories_id_seq OWNED BY public.food_categories.id;
+
+
+--
+-- Name: food_types; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.food_types (
+    id integer NOT NULL,
+    name text NOT NULL
+);
+
+
+--
+-- Name: food_types_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.food_types_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: food_types_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.food_types_id_seq OWNED BY public.food_types.id;
+
+
+--
 -- Name: foods; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.foods (
     id integer NOT NULL,
     user_id integer NOT NULL,
+    category_id integer,
+    type_id integer,
     name text NOT NULL,
     calories_per_unit numeric(10,2) NOT NULL,
+    protein_per_unit numeric(10,2) DEFAULT 0 NOT NULL,
+    carbs_per_unit numeric(10,2) DEFAULT 0 NOT NULL,
+    fat_per_unit numeric(10,2) DEFAULT 0 NOT NULL,
     unit_label text DEFAULT 'serving'::text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL
@@ -129,16 +194,16 @@ CREATE TABLE public.users (
 
 CREATE TABLE public.users_data (
     id integer NOT NULL,
-    data jsonb,
     age integer,
     gender boolean,
-    first_name character varying(50),
-    last_name character varying(50),
-    occupation character varying(50),
+    first_name character varying(100),
+    last_name character varying(100),
+    occupation character varying(100),
     height numeric(5,2),
     weight numeric(5,2),
-    city character varying(50),
-    country character varying(50)
+    city character varying(100),
+    country character varying(100),
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -170,6 +235,20 @@ ALTER TABLE ONLY public.daily_logs ALTER COLUMN id SET DEFAULT nextval('public.d
 
 
 --
+-- Name: food_categories id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.food_categories ALTER COLUMN id SET DEFAULT nextval('public.food_categories_id_seq'::regclass);
+
+
+--
+-- Name: food_types id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.food_types ALTER COLUMN id SET DEFAULT nextval('public.food_types_id_seq'::regclass);
+
+
+--
 -- Name: foods id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -189,6 +268,38 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 
 ALTER TABLE ONLY public.daily_logs
     ADD CONSTRAINT daily_logs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: food_categories food_categories_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.food_categories
+    ADD CONSTRAINT food_categories_name_key UNIQUE (name);
+
+
+--
+-- Name: food_categories food_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.food_categories
+    ADD CONSTRAINT food_categories_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: food_types food_types_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.food_types
+    ADD CONSTRAINT food_types_name_key UNIQUE (name);
+
+
+--
+-- Name: food_types food_types_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.food_types
+    ADD CONSTRAINT food_types_pkey PRIMARY KEY (id);
 
 
 --
@@ -253,6 +364,13 @@ CREATE INDEX foods_user_id_idx ON public.foods USING btree (user_id);
 
 
 --
+-- Name: idx_foods_category_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_foods_category_id ON public.foods USING btree (category_id);
+
+
+--
 -- Name: daily_logs daily_logs_food_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -269,6 +387,22 @@ ALTER TABLE ONLY public.daily_logs
 
 
 --
+-- Name: foods foods_category_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.foods
+    ADD CONSTRAINT foods_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.food_categories(id);
+
+
+--
+-- Name: foods foods_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.foods
+    ADD CONSTRAINT foods_type_id_fkey FOREIGN KEY (type_id) REFERENCES public.food_types(id);
+
+
+--
 -- Name: foods foods_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -281,7 +415,7 @@ ALTER TABLE ONLY public.foods
 --
 
 ALTER TABLE ONLY public.users_data
-    ADD CONSTRAINT users_data_id_fkey FOREIGN KEY (id) REFERENCES public.users(id);
+    ADD CONSTRAINT users_data_id_fkey FOREIGN KEY (id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
@@ -296,6 +430,4 @@ ALTER TABLE ONLY public.users_data
 --
 
 INSERT INTO public.schema_migrations (version) VALUES
-    ('20260402000000'),
-    ('20260403102141'),
-    ('20260407115511');
+    ('20260402000000');

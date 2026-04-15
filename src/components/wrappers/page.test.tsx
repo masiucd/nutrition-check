@@ -7,19 +7,18 @@ describe("PageWrapper", () => {
 		render(<PageWrapper>page content</PageWrapper>)
 		expect(screen.getByText("page content")).toBeInTheDocument()
 	})
-
-	it("renders a section element", () => {
-		const {container} = render(<PageWrapper>content</PageWrapper>)
-		expect(container.querySelector("section")).toBeInTheDocument()
-	})
-
-	it("applies extra className", () => {
-		const {container} = render(<PageWrapper className="extra">content</PageWrapper>)
-		expect(container.querySelector("section")).toHaveClass("extra")
-	})
-
-	it("applies max-w-full when fluid is true", () => {
+	it("When fluid is true, applies max-w-full", () => {
 		const {container} = render(<PageWrapper fluid>content</PageWrapper>)
-		expect(container.querySelector("section")).toHaveClass("max-w-full")
+		expect(container.querySelector("div")).toHaveClass("max-w-full")
+	})
+
+	it("When column is true, applies flex-col", () => {
+		const {container} = render(<PageWrapper column>content</PageWrapper>)
+		expect(container.querySelector("div")).toHaveClass("flex-col")
+	})
+
+	it("When className is provided, applies it", () => {
+		const {container} = render(<PageWrapper className="custom-class">content</PageWrapper>)
+		expect(container.querySelector("div")).toHaveClass("custom-class")
 	})
 })
