@@ -430,4 +430,5 @@ ALTER TABLE ONLY public.users_data
 --
 
 INSERT INTO public.schema_migrations (version) VALUES
-    ('20260402000000');
+    ('20260402000000'),
+    ('20260416111110');
