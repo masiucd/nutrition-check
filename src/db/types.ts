@@ -2,6 +2,8 @@
 // Row types that mirror the database schema exactly.
 // Use these as return types in DAOs and as input to server functions.
 
+import z from "zod"
+
 export type User = {
 	id: number
 	email: string
@@ -18,6 +20,21 @@ export type Food = {
 	created_at: Date
 	updated_at: Date
 }
+
+export const FoodItemSchema = z.object({
+	id: z.number(),
+	user_id: z.number(),
+	food_name: z.string(),
+	calories_per_unit: z.string(),
+	protein_per_unit: z.string(),
+	carbs_per_unit: z.string(),
+	fat_per_unit: z.string(),
+	unit_label: z.string(),
+	food_category: z.string(),
+	food_type: z.string(),
+})
+
+export type FoodItem = z.infer<typeof FoodItemSchema>
 
 export type DailyLog = {
 	id: number

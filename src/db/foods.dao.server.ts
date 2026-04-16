@@ -1,21 +1,21 @@
 // src/db/foods.dao.ts
 // SERVER-ONLY
 import {sql} from "./index"
-import type {Food} from "./types"
+import type {Food, FoodItem} from "./types"
 
 export const foodsDao = {
 	/** Search foods by name for a given user (case-insensitive, partial match). */
-	async search(userId: number, query: string): Promise<Food[]> {
+	async search(userId: number, query: string) {
 		return sql<Food[]>`
 			SELECT * FROM foods
 			WHERE user_id = ${userId}
-			  AND name ILIKE ${"%" + query + "%"}
+			  AND name ILIKE ${`%${query}%`}
 			ORDER BY name
 		`
 	},
 
 	/** List all foods for a user, ordered alphabetically. */
-	async findAll(userId: number): Promise<Food[]> {
+	async findAllForUser(userId: number) {
 		return sql<Food[]>`
 			SELECT * FROM foods
 			WHERE user_id = ${userId}
@@ -23,8 +23,29 @@ export const foodsDao = {
 		`
 	},
 
+	async getAllFoods(start = 0, limit = 20) {
+		return sql<FoodItem[]>`
+		select
+		   f.id,
+       f.user_id,
+       f.name as food_name,
+       f.calories_per_unit,
+       f.protein_per_unit,
+       f.carbs_per_unit,
+       f.fat_per_unit,
+       f.unit_label,
+       fc.name as food_category,
+       ft.name as food_type
+from foods f
+         left join food_categories fc on f.category_id = fc.id
+         left join food_types ft on f.type_id = ft.id
+         order by f.name
+         limit ${limit} offset ${start}
+		`
+	},
+
 	/** Find a single food by id. Returns undefined if not found. */
-	async findById(id: number): Promise<Food | undefined> {
+	async findById(id: number) {
 		const rows = await sql<Food[]>`
 			SELECT * FROM foods WHERE id = ${id} LIMIT 1
 		`
