@@ -16,7 +16,6 @@ function HomePage() {
 	return (
 		<div className="flex flex-col">
 			<Hero isAuthenticated={isAuthenticated} />
-
 			<Divider />
 			<Features />
 			<HowItWorks />

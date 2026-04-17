@@ -4,12 +4,15 @@
 
 import z from "zod"
 
-export type User = {
-	id: number
-	email: string
-	password: string
-	created_at: Date
-}
+const UserSchema = z.object({
+	id: z.number(),
+	email: z.string(),
+	password: z.string(),
+	is_admin: z.boolean(),
+	created_at: z.date(),
+})
+
+export type User = z.infer<typeof UserSchema>
 
 export type Food = {
 	id: number
@@ -21,6 +24,20 @@ export type Food = {
 	updated_at: Date
 }
 
+const FoodCategoryEnum = z.enum([
+	"Fruit",
+	"Vegetable",
+	"Meat",
+	"Dairy",
+	"Grains",
+	"Legumes",
+	"Nuts & Seeds",
+	"Snacks",
+	"Seafood",
+])
+
+const FoodTypeEnum = z.enum(["Whole Food", "Semi-Processed", "Processed"])
+
 export const FoodItemSchema = z.object({
 	id: z.number(),
 	user_id: z.number(),
@@ -30,11 +47,13 @@ export const FoodItemSchema = z.object({
 	carbs_per_unit: z.string(),
 	fat_per_unit: z.string(),
 	unit_label: z.string(),
-	food_category: z.string(),
-	food_type: z.string(),
+	food_category: FoodCategoryEnum,
+	food_type: FoodTypeEnum,
 })
 
 export type FoodItem = z.infer<typeof FoodItemSchema>
+export type FoodCategory = z.infer<typeof FoodCategoryEnum>
+export type FoodType = z.infer<typeof FoodTypeEnum>
 
 export type DailyLog = {
 	id: number

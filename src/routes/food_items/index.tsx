@@ -6,6 +6,7 @@ import {Badge} from "@/components/ui/badge"
 import {Button} from "@/components/ui/button"
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
 import {PageWrapper} from "@/components/wrappers/page"
+import type {FoodCategory, FoodType} from "@/db/types"
 import {getFoodItems} from "@/server/functions/food"
 
 export const Route = createFileRoute("/food_items/")({
@@ -14,8 +15,6 @@ export const Route = createFileRoute("/food_items/")({
 		const user = context.user
 		try {
 			const foodItems = await getFoodItems()
-			// biome-ignore lint/suspicious/noConsole: <explanation>
-			console.log("foodItems", foodItems)
 			return {user, foodItems}
 		} catch (error) {
 			// biome-ignore lint/suspicious/noConsole: <error logging>
@@ -46,7 +45,8 @@ const TYPE_VARIANT: Record<FoodType, BadgeProps["variant"]> = {
 	Processed: "orange",
 }
 
-function MacroCell({value, unit = "g"}: {value: number; unit?: string}) {
+type Unit = "g" | "ml" | "piece"
+function MacroCell({value, unit = "g"}: {value: string; unit?: Unit}) {
 	return (
 		<span className="tabular-nums">
 			{value}
@@ -106,7 +106,7 @@ function RouteComponent() {
 					<TableBody>
 						{foodItems.data.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={isAuthenticated ? 6 : 5} className="text-center">
+								<TableCell colSpan={isAuthenticated ? 9 : 8} className="text-center">
 									No food items found.
 								</TableCell>
 							</TableRow>
@@ -139,13 +139,13 @@ function RouteComponent() {
 										<MacroCell value={item.fat_per_unit} />
 									</TableCell>
 									<TableCell className="text-muted-foreground text-xs">{item.unit_label}</TableCell>
-									{user !== null && (
+									{isAuthenticated && (
 										<TableCell className="text-right font-semibold tabular-nums">
-											<div>
-												<Button variant="ghost" size="sm">
+											<div className="flex gap-2">
+												<Button variant="ghost" size="sm" disabled={user.id !== item.user_id}>
 													Edit {item.food_name}
 												</Button>
-												<Button variant="ghost" size="sm" disabled={user.id === item.user_id}>
+												<Button variant="ghost" size="sm" disabled={user.id !== item.user_id}>
 													Delete
 												</Button>
 											</div>
@@ -160,16 +160,3 @@ function RouteComponent() {
 		</PageWrapper>
 	)
 }
-
-type FoodCategory =
-	| "Fruit"
-	| "Vegetable"
-	| "Meat"
-	| "Dairy"
-	| "Grains"
-	| "Legumes"
-	| "Nuts & Seeds"
-	| "Snacks"
-	| "Seafood"
-
-type FoodType = "Whole Food" | "Processed" | "Semi-Processed"

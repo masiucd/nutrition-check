@@ -70,9 +70,9 @@ export const loginUser = createServerFn({method: "POST"})
 		}
 
 		const session = await getAppSession()
-
 		await session.update({
 			userId: user.id,
+			role: user.is_admin ? "admin" : "user",
 		})
 
 		// Cache the user in Redis so subsequent lookups skip the DB
@@ -96,7 +96,10 @@ export const logoutFn = createServerFn({method: "POST"}).handler(async () => {
 	if (userId) {
 		try {
 			await deleteUserFromCache(userId)
-		} catch (_err) {}
+		} catch (err) {
+			// biome-ignore lint/suspicious/noConsole: <logging>
+			console.error("Failed to delete user from cache during logout", err)
+		}
 	}
 
 	await session.clear()
