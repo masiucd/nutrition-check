@@ -184,7 +184,8 @@ CREATE TABLE public.users (
     id integer NOT NULL,
     email text NOT NULL,
     password text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    is_admin boolean DEFAULT false NOT NULL
 );
 
 
@@ -431,4 +432,5 @@ ALTER TABLE ONLY public.users_data
 
 INSERT INTO public.schema_migrations (version) VALUES
     ('20260402000000'),
-    ('20260416111110');
+    ('20260416111110'),
+    ('20260417105508');
