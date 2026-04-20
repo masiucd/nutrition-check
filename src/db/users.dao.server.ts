@@ -7,17 +7,18 @@ import type {User} from "./types"
 
 export const usersDao = {
 	/** Find a user by their email address. Returns undefined if not found. */
-	async findByEmail(email: string): Promise<User | undefined> {
+	async findByEmail(email: string): AwaitNullable<User> {
 		const rows = await sql<User[]>`
 			SELECT id,
 			  email,
 			  password,
+			  is_admin,
 			  created_at
 			FROM users
 			WHERE email = ${email}
 			LIMIT 1
 		`
-		return rows[0]
+		return firstItemOrNull(rows)
 	},
 
 	/** Find a user by their primary key. Returns null if not found. */
@@ -26,12 +27,13 @@ export const usersDao = {
 			SELECT id,
 			  email,
 			  password,
+			  is_admin,
 			  created_at
 			FROM users
 			WHERE id = ${id}
 			LIMIT 1
 		`
-		return rows.at(0) ?? null
+		return firstItemOrNull(rows)
 	},
 
 	/** Insert a new user. Returns the created row. */
@@ -42,9 +44,10 @@ export const usersDao = {
 			RETURNING id,
 			  email,
 			  password,
+			  is_admin,	
 			  created_at
 		`
-		return rows[0] ?? null
+		return firstItemOrNull(rows)
 	},
 
 	/** Update a user's hashed password. Returns the updated row. */
@@ -56,9 +59,10 @@ export const usersDao = {
 			RETURNING id,
 			  email,
 			  password,
+			  is_admin,
 			  created_at
 		`
-		return rows[0] ?? null
+		return firstItemOrNull(rows)
 	},
 
 	/** Update a user's email address. Returns the updated row. */
@@ -70,8 +74,13 @@ export const usersDao = {
 			RETURNING id,
 			  email,
 			  password,
+			  is_admin,
 			  created_at
 		`
-		return rows[0] ?? null
+		return firstItemOrNull(rows)
 	},
+}
+
+function firstItemOrNull<T>(arr: T[]): T | null {
+	return arr.length > 0 ? arr[0] : null
 }

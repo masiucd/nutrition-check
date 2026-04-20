@@ -9,45 +9,6 @@ export const Route = createFileRoute("/")({
 	component: HomePage,
 })
 
-const features = [
-	{
-		icon: Flame,
-		title: "Track Daily Calories",
-		description:
-			"Log every meal — breakfast, lunch, dinner, and snacks. See your daily totals at a glance and stay on top of your calorie goals.",
-	},
-	{
-		icon: Utensils,
-		title: "Manage Your Food Library",
-		description:
-			"Build a personal database of foods with their calorie and nutrition values. Reuse them across any day with a single click.",
-	},
-	{
-		icon: BarChart3,
-		title: "View Nutrition Data",
-		description:
-			"Browse calories per unit for every food in your library. Know exactly what you're eating before you log it.",
-	},
-	{
-		icon: TrendingUp,
-		title: "Daily Summaries",
-		description:
-			"Get an instant breakdown of your calorie intake for any day, grouped by meal so you can spot where you're going over.",
-	},
-	{
-		icon: BookOpen,
-		title: "Full Meal History",
-		description:
-			"Browse back through any previous day to review what you ate. Your complete history is always one click away.",
-	},
-	{
-		icon: Apple,
-		title: "Custom Portions",
-		description:
-			"Log any quantity — half a banana, two cups of oats, 150 g of chicken. Calories scale automatically.",
-	},
-] as const
-
 function HomePage() {
 	const ctx = Route.useRouteContext()
 	const isAuthenticated = isNonNullable(ctx.user)
@@ -55,7 +16,6 @@ function HomePage() {
 	return (
 		<div className="flex flex-col">
 			<Hero isAuthenticated={isAuthenticated} />
-
 			<Divider />
 			<Features />
 			<HowItWorks />
@@ -98,7 +58,7 @@ function HeroCta(props: {isAuthenticated: boolean}) {
 			) : (
 				<>
 					<Button asChild size="lg">
-						<Link to="/signup">Get started — it's free</Link>
+						<Link to="/signup">Get started</Link>
 					</Button>
 					<Button asChild variant="outline" size="lg">
 						<Link to="/login">Log in</Link>
@@ -198,8 +158,47 @@ function AuthenticatedCta() {
 				Sign up in seconds — no payment, no fluff. Just clean calorie tracking.
 			</p>
 			<Button asChild size="lg">
-				<Link to="/signup">Create a free account</Link>
+				<Link to="/signup">Create a account</Link>
 			</Button>
 		</section>
 	)
 }
+
+const features = [
+	{
+		icon: Flame,
+		title: "Track Daily Calories",
+		description:
+			"Log every meal — breakfast, lunch, dinner, and snacks. See your daily totals at a glance and stay on top of your calorie goals.",
+	},
+	{
+		icon: Utensils,
+		title: "Manage Your Food Library",
+		description:
+			"Build a personal database of foods with their calorie and nutrition values. Reuse them across any day with a single click.",
+	},
+	{
+		icon: BarChart3,
+		title: "View Nutrition Data",
+		description:
+			"Browse calories per unit for every food in your library. Know exactly what you're eating before you log it.",
+	},
+	{
+		icon: TrendingUp,
+		title: "Daily Summaries",
+		description:
+			"Get an instant breakdown of your calorie intake for any day, grouped by meal so you can spot where you're going over.",
+	},
+	{
+		icon: BookOpen,
+		title: "Full Meal History",
+		description:
+			"Browse back through any previous day to review what you ate. Your complete history is always one click away.",
+	},
+	{
+		icon: Apple,
+		title: "Custom Portions",
+		description:
+			"Log any quantity — half a banana, two cups of oats, 150 g of chicken. Calories scale automatically.",
+	},
+] as const

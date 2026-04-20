@@ -16,15 +16,13 @@ import {Flame, LogOut, UserIcon} from "lucide-react"
 import type {PropsWithChildren} from "react"
 import {Button} from "@/components/ui/button"
 import {appData} from "@/config"
+import type {User} from "@/db"
 import {todayUtc} from "@/lib/date"
 import {cn} from "@/lib/utils"
 import {getCurrentUserFn, logoutFn} from "@/server/functions/user"
 import appCss from "../styles.css?url"
 
-interface User {
-	id: number
-	email: string
-}
+type ContextUser = Pick<User, "id" | "email" | "is_admin"> | null
 
 export const Route = createRootRoute({
 	head: () => ({
@@ -56,7 +54,8 @@ export const Route = createRootRoute({
 			user: {
 				id: user.id,
 				email: user.email,
-			} satisfies User,
+				is_admin: user.is_admin,
+			} satisfies ContextUser,
 		}
 	},
 	notFoundComponent: props => {
@@ -80,7 +79,7 @@ function RootDocument({children}: PropsWithChildren) {
 				<QueryClientProvider client={queryClient}>
 					<Header user={ctx.user} />
 					<main className="flex min-h-[calc(100svh-15rem)] flex-col">{children}</main>
-					<Footer />
+					<Footer user={ctx.user} />
 					<ReactQueryDevtools initialIsOpen={false} />
 				</QueryClientProvider>
 				<TanStackDevtools
@@ -100,7 +99,7 @@ function RootDocument({children}: PropsWithChildren) {
 	)
 }
 
-function Header(props: {user: User | null}) {
+function Header(props: {user: ContextUser}) {
 	return (
 		<header className="sticky top-0 z-50 border-border/50 border-b bg-background/90 backdrop-blur-md">
 			<div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
@@ -121,7 +120,7 @@ function Header(props: {user: User | null}) {
 	)
 }
 
-function NavLinks(props: {user: User | null}) {
+function NavLinks(props: {user: ContextUser}) {
 	if (!props.user) return <UnauthenticatedNavLinks />
 	return <AuthenticatedNavLinks email={props.user.email} />
 }
@@ -264,7 +263,7 @@ function NavLink(props: LinkProps & PropsWithChildren) {
 	)
 }
 
-function Footer(props: {user: User | null}) {
+function Footer(props: {user: ContextUser}) {
 	return (
 		<footer className="border-border border-t bg-muted/30">
 			<div className="mx-auto max-w-7xl px-6 py-12">
