@@ -24,12 +24,12 @@ export const getFoodItem = createServerFn({method: "GET"})
 			const maybeFoodItem = await foodsDao.findById(data.id)
 			const foodItem = FoodItemSchema.safeParse(maybeFoodItem)
 			if (foodItem.error) {
-				return {data: null, error: foodItem.error.message}
+				return {foodItemData: null, error: foodItem.error.message}
 			}
-			return {data: foodItem.data, error: null}
+			return {foodItemData: foodItem.data, error: null}
 		} catch (e) {
 			// biome-ignore lint/suspicious/noConsole: <logging error>
 			console.error(e)
-			return {data: null, error: e instanceof Error ? e.message : String(e)}
+			return {foodItemData: null, error: e instanceof Error ? e.message : String(e)}
 		}
 	})

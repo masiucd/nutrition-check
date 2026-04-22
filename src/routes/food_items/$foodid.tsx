@@ -8,17 +8,21 @@ import {getFoodItem} from "@/server/functions/food"
 
 export const Route = createFileRoute("/food_items/$foodid")({
 	component: RouteComponent,
-	loader: async ({params}) => {
+	loader: async ({params, context}) => {
 		const id = Number(params.foodid)
-		return await getFoodItem({data: {id}})
+		const user = context.user
+		const maybeFoodItem = await getFoodItem({data: {id}})
+		return {resultData: maybeFoodItem, user}
 	},
 })
 
 function RouteComponent() {
 	const {foodid} = Route.useParams()
-	const {data: foodItem, error} = Route.useLoaderData()
+	const {
+		resultData: {error, foodItemData},
+	} = Route.useLoaderData()
 
-	if (error || !foodItem) {
+	if (error || foodItemData === null) {
 		return (
 			<PageWrapper>
 				<div className="mx-auto max-w-2xl py-12 text-center">
@@ -34,6 +38,17 @@ function RouteComponent() {
 		)
 	}
 
+	const {
+		food_category,
+		food_name,
+		unit_label,
+		calories_per_unit,
+		protein_per_unit,
+		food_type,
+		carbs_per_unit,
+		fat_per_unit,
+	} = foodItemData
+
 	return (
 		<PageWrapper>
 			<div className="mx-auto max-w-3xl px-4 py-8">
@@ -45,19 +60,17 @@ function RouteComponent() {
 					<CardHeader className="border-border/50 border-b bg-muted/30 pb-8">
 						<div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
 							<div>
-								<CardTitle className="font-bold text-3xl tracking-tight">
-									{foodItem.food_name}
-								</CardTitle>
+								<CardTitle className="font-bold text-3xl tracking-tight">{food_name}</CardTitle>
 								<CardDescription className="mt-2 font-medium text-base">
-									Nutrition Facts per 1 {foodItem.unit_label}
+									Nutrition Facts per 1 {unit_label}
 								</CardDescription>
 							</div>
 							<div className="flex flex-wrap gap-2 sm:flex-col sm:items-end">
 								<Badge variant="default" className="text-sm">
-									{foodItem.food_category}
+									{food_category}
 								</Badge>
 								<Badge variant="secondary" className="text-sm">
-									{foodItem.food_type}
+									{food_type}
 								</Badge>
 							</div>
 						</div>
@@ -68,9 +81,7 @@ function RouteComponent() {
 								<span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
 									Calories
 								</span>
-								<span className="mt-3 font-bold text-4xl text-primary">
-									{foodItem.calories_per_unit}
-								</span>
+								<span className="mt-3 font-bold text-4xl text-primary">{calories_per_unit}</span>
 								<span className="mt-1 font-medium text-muted-foreground text-sm">kcal</span>
 							</div>
 
@@ -78,7 +89,7 @@ function RouteComponent() {
 								<span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
 									Protein
 								</span>
-								<span className="mt-3 font-bold text-4xl">{foodItem.protein_per_unit}</span>
+								<span className="mt-3 font-bold text-4xl">{protein_per_unit}</span>
 								<span className="mt-1 font-medium text-muted-foreground text-sm">g</span>
 							</div>
 
@@ -86,15 +97,15 @@ function RouteComponent() {
 								<span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
 									Carbs
 								</span>
-								<span className="mt-3 font-bold text-4xl">{foodItem.carbs_per_unit}</span>
+								<span className="mt-3 font-bold text-4xl">{carbs_per_unit}</span>
 								<span className="mt-1 font-medium text-muted-foreground text-sm">g</span>
 							</div>
 
 							<div className="flex flex-col items-center justify-center rounded-xl border border-border/50 bg-card p-6 shadow-sm transition-colors hover:bg-muted/10">
 								<span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
-									Fat
+									Fat Fat
 								</span>
-								<span className="mt-3 font-bold text-4xl">{foodItem.fat_per_unit}</span>
+								<span className="mt-3 font-bold text-4xl">{fat_per_unit}</span>
 								<span className="mt-1 font-medium text-muted-foreground text-sm">g</span>
 							</div>
 						</div>
