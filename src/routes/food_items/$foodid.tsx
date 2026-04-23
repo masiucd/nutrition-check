@@ -1,4 +1,5 @@
 import {createFileRoute, Link} from "@tanstack/react-router"
+import {Pen, Trash2} from "lucide-react"
 import {Heading} from "@/components/typography"
 import {Badge} from "@/components/ui/badge"
 import {Button} from "@/components/ui/button"
@@ -16,10 +17,12 @@ export const Route = createFileRoute("/food_items/$foodid")({
 	},
 })
 
+// TODO if logged in and user owns the food item, show a "delete" button and "edit" button to the user
 function RouteComponent() {
 	const {foodid} = Route.useParams()
 	const {
 		resultData: {error, foodItemData},
+		user,
 	} = Route.useLoaderData()
 
 	if (error || foodItemData === null) {
@@ -49,6 +52,8 @@ function RouteComponent() {
 		fat_per_unit,
 	} = foodItemData
 
+	const isAuthenticated = user !== null
+
 	return (
 		<PageWrapper>
 			<div className="mx-auto max-w-3xl px-4 py-8">
@@ -66,12 +71,28 @@ function RouteComponent() {
 								</CardDescription>
 							</div>
 							<div className="flex flex-wrap gap-2 sm:flex-col sm:items-end">
-								<Badge variant="default" className="text-sm">
-									{food_category}
-								</Badge>
-								<Badge variant="secondary" className="text-sm">
-									{food_type}
-								</Badge>
+								<Link to="/food_items/category/$category" params={{category: food_category}}>
+									<Badge variant="default" className="text-sm">
+										{food_category}
+									</Badge>
+								</Link>
+								<Link to="/food_items/type/$type" params={{type: food_type}}>
+									<Badge variant="secondary" className="text-sm">
+										{food_type}
+									</Badge>
+								</Link>
+								<div>
+									{isAuthenticated && (
+										<div className="flex w-full gap-1">
+											<Button variant="ghost" size="sm">
+												<Pen />
+											</Button>
+											<Button variant="ghost" size="sm">
+												<Trash2 />
+											</Button>
+										</div>
+									)}
+								</div>
 							</div>
 						</div>
 					</CardHeader>
