@@ -6,7 +6,6 @@ import type {BadgeProps} from "@/components/ui/badge"
 import {Badge} from "@/components/ui/badge"
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select"
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
 import {PageWrapper} from "@/components/wrappers/page"
 import type {FoodCategory, FoodType} from "@/db/types"
@@ -32,8 +31,8 @@ const FOOD_TYPES = [
 
 type FoodItemsSearch = {
 	q?: string
-	type?: FoodType | "all"
-	category?: FoodCategory | "all"
+	types?: FoodType[]
+	categories?: FoodCategory[]
 }
 
 export const Route = createFileRoute("/food_items/")({
@@ -41,19 +40,31 @@ export const Route = createFileRoute("/food_items/")({
 	validateSearch: (search: Record<string, unknown>): FoodItemsSearch => {
 		const q = typeof search.q === "string" ? search.q : undefined
 
-		const type =
-			typeof search.type === "string" &&
-			(search.type === "all" || FOOD_TYPES.includes(search.type as FoodType))
-				? (search.type as FoodType | "all")
-				: undefined
+		const rawTypes = Array.isArray(search.types)
+			? search.types
+			: typeof search.types === "string"
+				? [search.types]
+				: []
 
-		const category =
-			typeof search.category === "string" &&
-			(search.category === "all" || FOOD_CATEGORIES.includes(search.category as FoodCategory))
-				? (search.category as FoodCategory | "all")
-				: undefined
+		const rawCategories = Array.isArray(search.categories)
+			? search.categories
+			: typeof search.categories === "string"
+				? [search.categories]
+				: []
 
-		return {q, type, category}
+		const types = rawTypes
+			.filter((value): value is string => typeof value === "string")
+			.filter((value): value is FoodType => FOOD_TYPES.includes(value as FoodType))
+
+		const categories = rawCategories
+			.filter((value): value is string => typeof value === "string")
+			.filter((value): value is FoodCategory => FOOD_CATEGORIES.includes(value as FoodCategory))
+
+		return {
+			...(q ? {q} : {}),
+			...(types.length > 0 ? {types} : {}),
+			...(categories.length > 0 ? {categories} : {}),
+		}
 	},
 	loader: async ({context}) => {
 		const user = context.user
@@ -95,7 +106,7 @@ function MacroCell({value, unit = "g"}: {value: string; unit?: Unit}) {
 	return (
 		<span className="tabular-nums">
 			{value}
-			<span className="-foreground ml-0.5 text-muted text-xs">{unit}</span>
+			<span className="ml-0.5 text-muted-foreground text-xs">{unit}</span>
 		</span>
 	)
 }
@@ -107,38 +118,55 @@ function RouteComponent() {
 	const isAuthenticated = user !== null
 
 	const q = search.q ?? ""
-	const type = search.type ?? "all"
-	const category = search.category ?? "all"
+	const selectedTypes = search.types ?? []
+	const selectedCategories = search.categories ?? []
 
 	const filteredItems = useMemo(() => {
 		const text = q.trim().toLowerCase()
 
 		return foodItems.data.filter(item => {
 			const matchesText = text.length === 0 || item.food_name.toLowerCase().includes(text)
-			const matchesType = type === "all" || item.food_type === type
-			const matchesCategory = category === "all" || item.food_category === category
+			const matchesType =
+				selectedTypes.length === 0 || selectedTypes.some(type => type === item.food_type)
+			const matchesCategory =
+				selectedCategories.length === 0 ||
+				selectedCategories.some(category => category === item.food_category)
 
 			return matchesText && matchesType && matchesCategory
 		})
-	}, [foodItems.data, q, type, category])
+	}, [foodItems.data, q, selectedTypes, selectedCategories])
 
-	const updateSearch = (
-		next: Partial<{q: string; type: FoodType | "all"; category: FoodCategory | "all"}>,
-	) => {
+	const updateSearch = (next: Partial<FoodItemsSearch>) => {
 		void navigate({
 			search: prev => {
 				const nextQ = next.q ?? prev.q ?? ""
-				const nextType = next.type ?? prev.type ?? "all"
-				const nextCategory = next.category ?? prev.category ?? "all"
+				const nextTypes = next.types ?? prev.types ?? []
+				const nextCategories = next.categories ?? prev.categories ?? []
 
 				return {
 					...(nextQ ? {q: nextQ} : {}),
-					...(nextType !== "all" ? {type: nextType} : {}),
-					...(nextCategory !== "all" ? {category: nextCategory} : {}),
+					...(nextTypes.length > 0 ? {types: nextTypes} : {}),
+					...(nextCategories.length > 0 ? {categories: nextCategories} : {}),
 				}
 			},
 			replace: true,
 		})
+	}
+
+	const toggleType = (value: FoodType) => {
+		const nextTypes = selectedTypes.includes(value)
+			? selectedTypes.filter(type => type !== value)
+			: [...selectedTypes, value]
+
+		updateSearch({types: nextTypes})
+	}
+
+	const toggleCategory = (value: FoodCategory) => {
+		const nextCategories = selectedCategories.includes(value)
+			? selectedCategories.filter(category => category !== value)
+			: [...selectedCategories, value]
+
+		updateSearch({categories: nextCategories})
 	}
 
 	const resetFilters = () => {
@@ -160,7 +188,7 @@ function RouteComponent() {
 			</div>
 
 			<section className="w-full rounded-lg border p-4">
-				<div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end">
+				<div className="mb-4 flex flex-col gap-4">
 					<div className="w-full md:max-w-sm">
 						<Text size="muted" className="mb-1">
 							Search
@@ -172,59 +200,55 @@ function RouteComponent() {
 						/>
 					</div>
 
-					<div className="w-full md:w-56">
-						<Text size="muted" className="mb-1">
-							Type
-						</Text>
-						<Select
-							value={type}
-							onValueChange={value => updateSearch({type: value as FoodType | "all"})}
-						>
-							<SelectTrigger>
-								<SelectValue placeholder="All types" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="all">All types</SelectItem>
+					<div className="grid gap-4 md:grid-cols-2">
+						<div>
+							<Text size="muted" className="mb-2">
+								Type
+							</Text>
+							<div className="flex flex-wrap gap-3">
 								{FOOD_TYPES.map(foodType => (
-									<SelectItem key={foodType} value={foodType}>
+									<label key={foodType} className="flex items-center gap-2 text-sm">
+										<input
+											type="checkbox"
+											checked={selectedTypes.includes(foodType)}
+											onChange={() => toggleType(foodType)}
+										/>
 										{foodType}
-									</SelectItem>
+									</label>
 								))}
-							</SelectContent>
-						</Select>
-					</div>
+							</div>
+						</div>
 
-					<div className="w-full md:w-56">
-						<Text size="muted" className="mb-1">
-							Category
-						</Text>
-						<Select
-							value={category}
-							onValueChange={value => updateSearch({category: value as FoodCategory | "all"})}
-						>
-							<SelectTrigger>
-								<SelectValue placeholder="All categories" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="all">All categories</SelectItem>
+						<div>
+							<Text size="muted" className="mb-2">
+								Category
+							</Text>
+							<div className="flex flex-wrap gap-3">
 								{FOOD_CATEGORIES.map(foodCategory => (
-									<SelectItem key={foodCategory} value={foodCategory}>
+									<label key={foodCategory} className="flex items-center gap-2 text-sm">
+										<input
+											type="checkbox"
+											checked={selectedCategories.includes(foodCategory)}
+											onChange={() => toggleCategory(foodCategory)}
+										/>
 										{foodCategory}
-									</SelectItem>
+									</label>
 								))}
-							</SelectContent>
-						</Select>
+							</div>
+						</div>
 					</div>
 
-					<Button variant="outline" onClick={resetFilters}>
-						Reset
-					</Button>
-
-					{isAuthenticated && (
-						<Button className="md:ml-auto">
-							New Food Item <PlusIcon />
+					<div className="flex flex-wrap items-center gap-2">
+						<Button variant="outline" onClick={resetFilters}>
+							Reset
 						</Button>
-					)}
+
+						{isAuthenticated && (
+							<Button className="md:ml-auto">
+								New Food Item <PlusIcon />
+							</Button>
+						)}
+					</div>
 				</div>
 
 				<Table>
