@@ -1,6 +1,7 @@
 import {createServerFn} from "@tanstack/react-start"
 import {z} from "zod"
 import {foodsDao} from "@/db"
+import {foodCategoriesDao, foodCategorySchema} from "@/db/category.dao.server"
 import {FoodItemSchema} from "@/db/types"
 
 export const getFoodItems = createServerFn({method: "GET"}).handler(async () => {
@@ -32,4 +33,18 @@ export const getFoodItem = createServerFn({method: "GET"})
 			console.error(e)
 			return {foodItemData: null, error: e instanceof Error ? e.message : String(e)}
 		}
+	})
+
+export const getFoodItemsByCategory = createServerFn({method: "GET"})
+	.inputValidator(z.object({category: z.string()}))
+	.handler(async ({data}) => {
+		const foods = await foodCategoriesDao.categoriesByName(data.category)
+		const parsedFoodCategories = foodCategorySchema.array().safeParse(foods)
+		if (parsedFoodCategories.error) {
+			return {data: [], error: parsedFoodCategories.error.message}
+		}
+		if (parsedFoodCategories.success) {
+			return {data: parsedFoodCategories.data, error: null}
+		}
+		return {data: [], error: null}
 	})
