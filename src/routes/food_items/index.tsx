@@ -1,16 +1,60 @@
-import {createFileRoute, Link} from "@tanstack/react-router"
+import {createFileRoute, Link, useNavigate} from "@tanstack/react-router"
 import {PlusIcon} from "lucide-react"
+import {useMemo} from "react"
 import {Heading, Text} from "@/components/typography"
 import type {BadgeProps} from "@/components/ui/badge"
 import {Badge} from "@/components/ui/badge"
 import {Button} from "@/components/ui/button"
+import {Input} from "@/components/ui/input"
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select"
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
 import {PageWrapper} from "@/components/wrappers/page"
 import type {FoodCategory, FoodType} from "@/db/types"
 import {getFoodItems} from "@/server/functions/food"
 
+const FOOD_CATEGORIES = [
+	"Fruit",
+	"Vegetable",
+	"Meat",
+	"Dairy",
+	"Grains",
+	"Legumes",
+	"Nuts & Seeds",
+	"Snacks",
+	"Seafood",
+] as const satisfies readonly FoodCategory[]
+
+const FOOD_TYPES = [
+	"Whole Food",
+	"Semi-Processed",
+	"Processed",
+] as const satisfies readonly FoodType[]
+
+type FoodItemsSearch = {
+	q?: string
+	type?: FoodType | "all"
+	category?: FoodCategory | "all"
+}
+
 export const Route = createFileRoute("/food_items/")({
 	component: RouteComponent,
+	validateSearch: (search: Record<string, unknown>): FoodItemsSearch => {
+		const q = typeof search.q === "string" ? search.q : undefined
+
+		const type =
+			typeof search.type === "string" &&
+			(search.type === "all" || FOOD_TYPES.includes(search.type as FoodType))
+				? (search.type as FoodType | "all")
+				: undefined
+
+		const category =
+			typeof search.category === "string" &&
+			(search.category === "all" || FOOD_CATEGORIES.includes(search.category as FoodCategory))
+				? (search.category as FoodCategory | "all")
+				: undefined
+
+		return {q, type, category}
+	},
 	loader: async ({context}) => {
 		const user = context.user
 		try {
@@ -46,18 +90,63 @@ const TYPE_VARIANT: Record<FoodType, BadgeProps["variant"]> = {
 }
 
 type Unit = "g" | "ml" | "piece"
+
 function MacroCell({value, unit = "g"}: {value: string; unit?: Unit}) {
 	return (
 		<span className="tabular-nums">
 			{value}
-			<span className="ml-0.5 text-muted-foreground text-xs">{unit}</span>
+			<span className="-foreground ml-0.5 text-muted text-xs">{unit}</span>
 		</span>
 	)
 }
 
 function RouteComponent() {
 	const {user, foodItems} = Route.useLoaderData()
+	const search = Route.useSearch()
+	const navigate = useNavigate({from: Route.fullPath})
 	const isAuthenticated = user !== null
+
+	const q = search.q ?? ""
+	const type = search.type ?? "all"
+	const category = search.category ?? "all"
+
+	const filteredItems = useMemo(() => {
+		const text = q.trim().toLowerCase()
+
+		return foodItems.data.filter(item => {
+			const matchesText = text.length === 0 || item.food_name.toLowerCase().includes(text)
+			const matchesType = type === "all" || item.food_type === type
+			const matchesCategory = category === "all" || item.food_category === category
+
+			return matchesText && matchesType && matchesCategory
+		})
+	}, [foodItems.data, q, type, category])
+
+	const updateSearch = (
+		next: Partial<{q: string; type: FoodType | "all"; category: FoodCategory | "all"}>,
+	) => {
+		void navigate({
+			search: prev => {
+				const nextQ = next.q ?? prev.q ?? ""
+				const nextType = next.type ?? prev.type ?? "all"
+				const nextCategory = next.category ?? prev.category ?? "all"
+
+				return {
+					...(nextQ ? {q: nextQ} : {}),
+					...(nextType !== "all" ? {type: nextType} : {}),
+					...(nextCategory !== "all" ? {category: nextCategory} : {}),
+				}
+			},
+			replace: true,
+		})
+	}
+
+	const resetFilters = () => {
+		void navigate({
+			search: () => ({}),
+			replace: true,
+		})
+	}
 
 	return (
 		<PageWrapper column className="items-start gap-6 py-8">
@@ -70,12 +159,73 @@ function RouteComponent() {
 				</Text>
 			</div>
 
-			<section className="w-full rounded-lg border">
-				{isAuthenticated && (
-					<Button>
-						New Food Item <PlusIcon />
+			<section className="w-full rounded-lg border p-4">
+				<div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end">
+					<div className="w-full md:max-w-sm">
+						<Text size="muted" className="mb-1">
+							Search
+						</Text>
+						<Input
+							value={q}
+							onChange={event => updateSearch({q: event.target.value})}
+							placeholder="Filter by food name..."
+						/>
+					</div>
+
+					<div className="w-full md:w-56">
+						<Text size="muted" className="mb-1">
+							Type
+						</Text>
+						<Select
+							value={type}
+							onValueChange={value => updateSearch({type: value as FoodType | "all"})}
+						>
+							<SelectTrigger>
+								<SelectValue placeholder="All types" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="all">All types</SelectItem>
+								{FOOD_TYPES.map(foodType => (
+									<SelectItem key={foodType} value={foodType}>
+										{foodType}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+
+					<div className="w-full md:w-56">
+						<Text size="muted" className="mb-1">
+							Category
+						</Text>
+						<Select
+							value={category}
+							onValueChange={value => updateSearch({category: value as FoodCategory | "all"})}
+						>
+							<SelectTrigger>
+								<SelectValue placeholder="All categories" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="all">All categories</SelectItem>
+								{FOOD_CATEGORIES.map(foodCategory => (
+									<SelectItem key={foodCategory} value={foodCategory}>
+										{foodCategory}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+
+					<Button variant="outline" onClick={resetFilters}>
+						Reset
 					</Button>
-				)}
+
+					{isAuthenticated && (
+						<Button className="md:ml-auto">
+							New Food Item <PlusIcon />
+						</Button>
+					)}
+				</div>
 
 				<Table>
 					<TableHeader>
@@ -104,14 +254,14 @@ function RouteComponent() {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{foodItems.data.length === 0 ? (
+						{filteredItems.length === 0 ? (
 							<TableRow>
 								<TableCell colSpan={isAuthenticated ? 9 : 8} className="text-center">
 									No food items found.
 								</TableCell>
 							</TableRow>
 						) : (
-							foodItems.data.map(item => (
+							filteredItems.map(item => (
 								<TableRow key={item.id}>
 									<TableCell className="font-medium">
 										<Link to="/food_items/$foodid" params={{foodid: `${item.id}`}}>
