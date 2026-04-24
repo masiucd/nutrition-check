@@ -12,11 +12,12 @@ export const sql = postgres(dbUrl, {
 	connect_timeout: 2,
 })
 
+export {foodCategoriesDao} from "./category.dao.server"
 export {dailyLogsDao} from "./daily_logs.dao.server"
 export {foodsDao} from "./foods.dao.server"
 export {foodTypesDao} from "./type.dao.server"
 // Types
-export type {DailyLog, DailyLogWithFood, Food, User, UserData} from "./types"
+export type {DailyLog, DailyLogWithFood, DailyTotalsRow, Food, Meal, User, UserData} from "./types"
 // DAOs — import these in server functions, never in client code
 export {userDataDao} from "./user_data.dao.server"
 export {usersDao} from "./users.dao.server"

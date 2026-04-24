@@ -1,7 +1,7 @@
 import {createFileRoute, Link} from "@tanstack/react-router"
 import {Heading, Text} from "@/components/typography"
 import {PageWrapper} from "@/components/wrappers/page"
-import type {FoodTypeItem} from "@/db/type.dao.server"
+import type {FoodTypeRow} from "@/lib/schemas"
 import {getFoodItemsByType} from "@/server/functions/food"
 
 export const Route = createFileRoute("/food_items/type/$type")({
@@ -45,7 +45,7 @@ function RouteComponent() {
 	)
 }
 
-function FoodList({foodItems}: {foodItems: FoodTypeItem[]}) {
+function FoodList({foodItems}: {foodItems: FoodTypeRow[]}) {
 	return (
 		<ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 			{foodItems.map(item => (

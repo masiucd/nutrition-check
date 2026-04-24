@@ -1,9 +1,13 @@
 import {createServerFn} from "@tanstack/react-start"
-import {z} from "zod"
-import {foodsDao, foodTypesDao} from "@/db"
-import {foodCategoriesDao, foodCategorySchema} from "@/db/category.dao.server"
-import {foodTypeSchema} from "@/db/type.dao.server"
-import {FoodItemSchema} from "@/db/types"
+import {foodCategoriesDao, foodsDao, foodTypesDao} from "@/db"
+import {
+	FoodCategoryRowSchema,
+	FoodItemSchema,
+	FoodTypeRowSchema,
+	GetFoodItemSchema,
+	GetFoodItemsByCategorySchema,
+	GetFoodItemsByTypeSchema,
+} from "@/lib/schemas"
 
 export const getFoodItems = createServerFn({method: "GET"}).handler(async () => {
 	const foods = await foodsDao.getAllFoods()
@@ -20,7 +24,7 @@ export const getFoodItems = createServerFn({method: "GET"}).handler(async () => 
 })
 
 export const getFoodItem = createServerFn({method: "GET"})
-	.inputValidator(z.object({id: z.number()}))
+	.inputValidator(GetFoodItemSchema)
 	.handler(async ({data}) => {
 		try {
 			const maybeFoodItem = await foodsDao.findById(data.id)
@@ -37,10 +41,10 @@ export const getFoodItem = createServerFn({method: "GET"})
 	})
 
 export const getFoodItemsByCategory = createServerFn({method: "GET"})
-	.inputValidator(z.object({category: z.string()}))
+	.inputValidator(GetFoodItemsByCategorySchema)
 	.handler(async ({data}) => {
 		const foods = await foodCategoriesDao.categoriesByName(data.category)
-		const parsedFoodCategories = foodCategorySchema.array().safeParse(foods)
+		const parsedFoodCategories = FoodCategoryRowSchema.array().safeParse(foods)
 		if (parsedFoodCategories.error) {
 			return {data: [], error: parsedFoodCategories.error.message}
 		}
@@ -51,10 +55,10 @@ export const getFoodItemsByCategory = createServerFn({method: "GET"})
 	})
 
 export const getFoodItemsByType = createServerFn({method: "GET"})
-	.inputValidator(z.object({type: z.string()}))
+	.inputValidator(GetFoodItemsByTypeSchema)
 	.handler(async ({data}) => {
 		const foods = await foodTypesDao.typesByName(data.type)
-		const parsedFoodTypes = foodTypeSchema.array().safeParse(foods)
+		const parsedFoodTypes = FoodTypeRowSchema.array().safeParse(foods)
 		if (parsedFoodTypes.error) {
 			return {data: [], error: parsedFoodTypes.error.message}
 		}

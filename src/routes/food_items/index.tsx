@@ -8,7 +8,7 @@ import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
 import {PageWrapper} from "@/components/wrappers/page"
-import type {FoodCategory, FoodType} from "@/db/types"
+import type {FoodCategoryName, FoodTypeName} from "@/lib/schemas"
 import {getFoodItems} from "@/server/functions/food"
 
 const FOOD_CATEGORIES = [
@@ -21,18 +21,18 @@ const FOOD_CATEGORIES = [
 	"Nuts & Seeds",
 	"Snacks",
 	"Seafood",
-] as const satisfies readonly FoodCategory[]
+] as const satisfies readonly FoodCategoryName[]
 
 const FOOD_TYPES = [
 	"Whole Food",
 	"Semi-Processed",
 	"Processed",
-] as const satisfies readonly FoodType[]
+] as const satisfies readonly FoodTypeName[]
 
 type FoodItemsSearch = {
 	q?: string
-	types?: FoodType[]
-	categories?: FoodCategory[]
+	types?: FoodTypeName[]
+	categories?: FoodCategoryName[]
 }
 
 export const Route = createFileRoute("/food_items/")({
@@ -54,11 +54,13 @@ export const Route = createFileRoute("/food_items/")({
 
 		const types = rawTypes
 			.filter((value): value is string => typeof value === "string")
-			.filter((value): value is FoodType => FOOD_TYPES.includes(value as FoodType))
+			.filter((value): value is FoodTypeName => FOOD_TYPES.includes(value as FoodTypeName))
 
 		const categories = rawCategories
 			.filter((value): value is string => typeof value === "string")
-			.filter((value): value is FoodCategory => FOOD_CATEGORIES.includes(value as FoodCategory))
+			.filter((value): value is FoodCategoryName =>
+				FOOD_CATEGORIES.includes(value as FoodCategoryName),
+			)
 
 		return {
 			...(q ? {q} : {}),
@@ -82,7 +84,7 @@ export const Route = createFileRoute("/food_items/")({
 	},
 })
 
-const CATEGORY_VARIANT: Record<FoodCategory, BadgeProps["variant"]> = {
+const CATEGORY_VARIANT: Record<FoodCategoryName, BadgeProps["variant"]> = {
 	Fruit: "pink",
 	Vegetable: "success",
 	Meat: "terracotta",
@@ -94,7 +96,7 @@ const CATEGORY_VARIANT: Record<FoodCategory, BadgeProps["variant"]> = {
 	Seafood: "teal",
 }
 
-const TYPE_VARIANT: Record<FoodType, BadgeProps["variant"]> = {
+const TYPE_VARIANT: Record<FoodTypeName, BadgeProps["variant"]> = {
 	"Whole Food": "success",
 	"Semi-Processed": "warning",
 	Processed: "orange",
@@ -153,7 +155,7 @@ function RouteComponent() {
 		})
 	}
 
-	const toggleType = (value: FoodType) => {
+	const toggleType = (value: FoodTypeName) => {
 		const nextTypes = selectedTypes.includes(value)
 			? selectedTypes.filter(type => type !== value)
 			: [...selectedTypes, value]
@@ -161,7 +163,7 @@ function RouteComponent() {
 		updateSearch({types: nextTypes})
 	}
 
-	const toggleCategory = (value: FoodCategory) => {
+	const toggleCategory = (value: FoodCategoryName) => {
 		const nextCategories = selectedCategories.includes(value)
 			? selectedCategories.filter(category => category !== value)
 			: [...selectedCategories, value]

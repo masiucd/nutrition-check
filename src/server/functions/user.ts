@@ -1,18 +1,18 @@
 import {redirect} from "@tanstack/react-router"
 import {createServerFn} from "@tanstack/react-start"
-import {z} from "zod"
 import {userDataDao, usersDao} from "@/db"
+import {
+	CreateUserSchema,
+	LoginUserSchema,
+	UpdateEmailSchema,
+	UpdatePasswordSchema,
+	UpdateUserProfileSchema,
+	UserSchema,
+} from "@/lib/schemas"
 import {comparePassword, hashPassword} from "../utils/password.server"
 import {deleteUserFromCache, getUserFromCache, storeUserInCache} from "../utils/redis.server"
 import {getAppSession} from "../utils/session"
 import {HttpStatusCode} from "../utils/status_code"
-
-const CreateUserSchema = z.object({
-	name: z.string(),
-	email: z.email(),
-	password: z.string(),
-	confirmPassword: z.string(),
-})
 
 export const createUser = createServerFn({method: "POST"})
 	.inputValidator(CreateUserSchema)
@@ -43,11 +43,6 @@ export const createUser = createServerFn({method: "POST"})
 			status: HttpStatusCode.CREATED,
 		}
 	})
-
-const LoginUserSchema = z.object({
-	email: z.email(),
-	password: z.string(),
-})
 
 export const loginUser = createServerFn({method: "POST"})
 	.inputValidator(LoginUserSchema)
@@ -117,31 +112,39 @@ export const getCurrentUserFn = createServerFn({method: "GET"}).handler(async ()
 
 	// Redis cache handles repeated lookups — only falls back to the DB on a miss or Redis error
 	try {
-		// const cached = await redis.get(getUserCacheKey(userId))
-		const cashedUser = await getUserFromCache(userId)
-		if (cashedUser !== null) {
-			// since cached data is already deserialised, we can return it directly , no need to hit the DB
-			return cashedUser
+		const cachedUser = await getUserFromCache(userId)
+		if (cachedUser !== null) {
+			const parsedUser = UserSchema.safeParse(cachedUser)
+			if (parsedUser.success) {
+				return parsedUser.data
+			}
+			// Cached data is stale or corrupt — fall through to DB
+			// biome-ignore lint/suspicious/noConsole: <logging>
+			console.warn("[getCurrentUserFn] Cached user failed schema validation, falling back to DB")
 		}
-	} catch (_err) {}
+	} catch (err) {
+		// biome-ignore lint/suspicious/noConsole: <logging>
+		console.error("[getCurrentUserFn] Redis error, falling back to DB", err)
+	}
 
-	// If cached data is not available, fall back to the DB
+	// Cache miss, stale data, or Redis error — fall back to the DB
 	const user = await usersDao.findById(userId)
+	if (!user) {
+		return null
+	}
 
-	if (user) {
-		try {
-			await storeUserInCache({userId, user})
-		} catch (_err) {}
+	// Re-populate the cache so the next request is served from Redis
+	try {
+		await storeUserInCache({userId, user})
+	} catch (err) {
+		// biome-ignore lint/suspicious/noConsole: <logging>
+		console.error("[getCurrentUserFn] Failed to cache user after DB lookup", err)
 	}
 
 	return user
 })
 
 // Update user email
-const UpdateEmailSchema = z.object({
-	email: z.email("Please enter a valid email"),
-})
-
 export const updateUserEmailFn = createServerFn({method: "POST"})
 	.inputValidator(UpdateEmailSchema)
 	.handler(async ({data}) => {
@@ -170,12 +173,6 @@ export const updateUserEmailFn = createServerFn({method: "POST"})
 	})
 
 // Update user password
-const UpdatePasswordSchema = z.object({
-	currentPassword: z.string().min(1, "Current password is required"),
-	newPassword: z.string().min(6, "Password must be at least 6 characters"),
-	confirmPassword: z.string().min(6, "Please confirm your new password"),
-})
-
 export const updateUserPasswordFn = createServerFn({method: "POST"})
 	.inputValidator(UpdatePasswordSchema)
 	.handler(async ({data}) => {
@@ -228,18 +225,6 @@ export const getUserProfileFn = createServerFn({method: "GET"}).handler(async ()
 })
 
 // Update user profile data
-const UpdateUserProfileSchema = z.object({
-	firstName: z.string().max(100).optional(),
-	lastName: z.string().max(100).optional(),
-	age: z.number().int().min(1).max(150).nullable().optional(),
-	gender: z.boolean().nullable().optional(),
-	occupation: z.string().max(200).optional(),
-	height: z.number().min(0).max(300).nullable().optional(),
-	weight: z.number().min(0).max(600).nullable().optional(),
-	city: z.string().max(100).optional(),
-	country: z.string().max(100).optional(),
-})
-
 export const updateUserProfileFn = createServerFn({method: "POST"})
 	.inputValidator(UpdateUserProfileSchema)
 	.handler(async ({data}) => {

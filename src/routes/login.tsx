@@ -1,7 +1,6 @@
 import {useForm} from "@tanstack/react-form"
 import {createFileRoute, Link, redirect, useNavigate} from "@tanstack/react-router"
 import {useState} from "react"
-import {z} from "zod"
 import {Button} from "@/components/ui/button"
 import {
 	Card,
@@ -14,6 +13,7 @@ import {
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
 import {PageWrapper} from "@/components/wrappers/page"
+import {emailSchema, passwordSchema, validate} from "@/lib/schemas"
 import {loginUser} from "@/server/functions/user"
 import {HttpStatusCode} from "@/server/utils/status_code"
 
@@ -25,18 +25,6 @@ export const Route = createFileRoute("/login")({
 		}
 	},
 })
-
-const emailSchema = z.email("Please enter a valid email address").min(5, "Email is required")
-
-const passwordSchema = z
-	.string()
-	.min(1, "Password is required")
-	.min(6, "Password must be at least 6 characters")
-
-function validate<T>(schema: z.ZodType<T>, value: T): string | undefined {
-	const result = schema.safeParse(value)
-	return result.success ? undefined : result.error.issues[0]?.message
-}
 
 function LoginPage() {
 	const [error, setError] = useState<string | null>(null)

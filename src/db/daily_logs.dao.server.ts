@@ -1,7 +1,7 @@
 // src/db/daily-logs.dao.ts
 // SERVER-ONLY
 import {sql} from "./index"
-import type {DailyLog, DailyLogWithFood} from "./types"
+import type {DailyLog, DailyLogWithFood, DailyTotalsRow, Meal} from "./types"
 
 export const dailyLogsDao = {
 	/**
@@ -43,7 +43,7 @@ export const dailyLogsDao = {
 		userId: number,
 		foodId: number,
 		date: string,
-		meal: DailyLog["meal"],
+		meal: Meal,
 		quantity: number,
 		caloriesPerUnit: number,
 	): Promise<DailyLog> {
@@ -61,7 +61,7 @@ export const dailyLogsDao = {
 		id: number,
 		quantity: number,
 		caloriesPerUnit: number,
-		meal: DailyLog["meal"],
+		meal: Meal,
 	): Promise<DailyLog> {
 		const calories = quantity * caloriesPerUnit
 		const rows = await sql<DailyLog[]>`
@@ -86,12 +86,8 @@ export const dailyLogsDao = {
 	 * Summarise total calories per day for a user over a date range.
 	 * Returns rows ordered from oldest to newest.
 	 */
-	async dailyTotals(
-		userId: number,
-		from: string,
-		to: string,
-	): Promise<Array<{log_date: string; total_calories: number}>> {
-		return sql`
+	async dailyTotals(userId: number, from: string, to: string): Promise<DailyTotalsRow[]> {
+		return sql<DailyTotalsRow[]>`
 			SELECT
 				log_date,
 				SUM(calories)::numeric AS total_calories

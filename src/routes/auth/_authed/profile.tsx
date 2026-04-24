@@ -2,6 +2,7 @@ import {useForm} from "@tanstack/react-form"
 import {createFileRoute, useRouter} from "@tanstack/react-router"
 import {useServerFn} from "@tanstack/react-start"
 import {
+	Apple,
 	Calendar,
 	ClipboardList,
 	KeyRound,
@@ -12,7 +13,6 @@ import {
 	Weight,
 } from "lucide-react"
 import {type PropsWithChildren, useState} from "react"
-import {z} from "zod"
 import {Button} from "@/components/ui/button"
 import {
 	Card,
@@ -25,6 +25,13 @@ import {
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
 import {PageWrapper} from "@/components/wrappers/page"
+import {
+	confirmPasswordSchema,
+	currentPasswordSchema,
+	emailSchema,
+	newPasswordSchema,
+	validate,
+} from "@/lib/schemas"
 import {cn} from "@/lib/utils"
 import {
 	getCurrentUserFn,
@@ -51,21 +58,6 @@ export const Route = createFileRoute("/auth/_authed/profile")({
 		return <div>...loading</div>
 	},
 })
-
-// ─── Zod Validators ───────────────────────────────────────────────────────────
-
-const emailSchema = z.email("Please enter a valid email address")
-const currentPasswordSchema = z.string().min(1, "Current password is required")
-const newPasswordSchema = z
-	.string()
-	.min(1, "New password is required")
-	.min(6, "Password must be at least 6 characters")
-const confirmPasswordSchema = z.string().min(1, "Please confirm your new password")
-
-function validate<T>(schema: z.ZodType<T>, value: T): string | undefined {
-	const result = schema.safeParse(value)
-	return result.success ? undefined : result.error.issues[0]?.message
-}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -107,7 +99,7 @@ function Alert({state}: {state: AlertState}) {
 	)
 }
 
-type Tab = "info" | "personal" | "security"
+type Tab = "info" | "personal" | "security" | "foods"
 
 function TabButton({
 	active,
@@ -691,8 +683,6 @@ function PersonalDetailsForm({
 	)
 }
 
-// ─── Route component ──────────────────────────────────────────────────────────
-
 function RouteComponent() {
 	const {user: fullUser, userData: initialUserData} = Route.useLoaderData()
 	const ctx = Route.useRouteContext()
@@ -774,58 +764,103 @@ function RouteComponent() {
 
 				{/* ── Settings tabs ── */}
 				<div>
-					{/* Tab nav */}
-					<div className="mb-4 flex gap-1 rounded-xl border bg-muted/50 p-1">
-						<TabButton active={activeTab === "info"} onClick={() => setActiveTab("info")}>
-							<User className="size-4" />
-							Account info
-						</TabButton>
-						<TabButton active={activeTab === "personal"} onClick={() => setActiveTab("personal")}>
-							<ClipboardList className="size-4" />
-							Personal details
-						</TabButton>
-						<TabButton active={activeTab === "security"} onClick={() => setActiveTab("security")}>
-							<KeyRound className="size-4" />
-							Security
-						</TabButton>
-					</div>
-
-					{/* Tab panels */}
-					{activeTab === "info" && (
-						<Card className="shadow-sm">
-							<CardHeader>
-								<CardTitle className="text-lg">Account information</CardTitle>
-								<CardDescription>Update the email address for your account</CardDescription>
-							</CardHeader>
-							<EditEmailForm currentEmail={currentEmail} onSuccess={handleEmailUpdate} />
-						</Card>
-					)}
-
-					{activeTab === "personal" && (
-						<Card className="shadow-sm">
-							<CardHeader>
-								<CardTitle className="text-lg">Personal details</CardTitle>
-								<CardDescription>
-									Tell us a bit about yourself — this helps personalise your experience
-								</CardDescription>
-							</CardHeader>
-							<PersonalDetailsForm initialData={userData} onSuccess={setUserData} />
-						</Card>
-					)}
-
-					{activeTab === "security" && (
-						<Card className="shadow-sm">
-							<CardHeader>
-								<CardTitle className="text-lg">Change password</CardTitle>
-								<CardDescription>
-									Choose a strong password at least 6 characters long
-								</CardDescription>
-							</CardHeader>
-							<ChangePasswordForm />
-						</Card>
-					)}
+					<TabNav activeTab={activeTab} setTab={(tab: Tab) => setActiveTab(tab)} />
+					<TabPanels
+						activeTab={activeTab}
+						currentEmail={currentEmail}
+						handleEmailUpdate={handleEmailUpdate}
+						userData={userData}
+						setUserData={setUserData}
+					/>
 				</div>
 			</div>
 		</PageWrapper>
+	)
+}
+
+function FoodItemsList() {
+	// TODO fetch food items from API
+	return <p>Food item list</p>
+}
+
+function TabNav({activeTab, setTab}: {activeTab: Tab; setTab: (tab: Tab) => void}) {
+	return (
+		<div className="mb-4 flex gap-1 rounded-xl border bg-muted/50 p-1">
+			<TabButton active={activeTab === "info"} onClick={() => setTab("info")}>
+				<User className="size-4" />
+				Account info
+			</TabButton>
+			<TabButton active={activeTab === "foods"} onClick={() => setTab("foods")}>
+				<Apple className="size-4" />
+				Foods
+			</TabButton>
+			<TabButton active={activeTab === "personal"} onClick={() => setTab("personal")}>
+				<ClipboardList className="size-4" />
+				Personal details
+			</TabButton>
+			<TabButton active={activeTab === "security"} onClick={() => setTab("security")}>
+				<KeyRound className="size-4" />
+				Security
+			</TabButton>
+		</div>
+	)
+}
+
+function TabPanels({
+	activeTab,
+	currentEmail,
+	handleEmailUpdate,
+	userData,
+	setUserData,
+}: {
+	activeTab: Tab
+	currentEmail: string
+	handleEmailUpdate: (newEmail: string) => void
+	userData: UserDataRow | null
+	setUserData: (data: UserDataRow | null) => void
+}) {
+	return (
+		<>
+			{activeTab === "info" && (
+				<Card className="shadow-sm">
+					<CardHeader>
+						<CardTitle className="text-lg">Account information</CardTitle>
+						<CardDescription>Update the email address for your account</CardDescription>
+					</CardHeader>
+					<EditEmailForm currentEmail={currentEmail} onSuccess={handleEmailUpdate} />
+				</Card>
+			)}
+
+			{activeTab === "personal" && (
+				<Card className="shadow-sm">
+					<CardHeader>
+						<CardTitle className="text-lg">Personal details</CardTitle>
+						<CardDescription>
+							Tell us a bit about yourself — this helps personalise your experience
+						</CardDescription>
+					</CardHeader>
+					<PersonalDetailsForm initialData={userData} onSuccess={setUserData} />
+				</Card>
+			)}
+
+			{activeTab === "security" && (
+				<Card className="shadow-sm">
+					<CardHeader>
+						<CardTitle className="text-lg">Change password</CardTitle>
+						<CardDescription>Choose a strong password at least 6 characters long</CardDescription>
+					</CardHeader>
+					<ChangePasswordForm />
+				</Card>
+			)}
+			{activeTab === "foods" && (
+				<Card>
+					<CardHeader>
+						<CardTitle className="text-lg">Foods</CardTitle>
+						<CardDescription>Manage your food items</CardDescription>
+					</CardHeader>
+					<FoodItemsList />
+				</Card>
+			)}
+		</>
 	)
 }
