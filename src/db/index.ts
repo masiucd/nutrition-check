@@ -14,6 +14,7 @@ export const sql = postgres(dbUrl, {
 
 export {dailyLogsDao} from "./daily_logs.dao.server"
 export {foodsDao} from "./foods.dao.server"
+export {foodTypesDao} from "./type.dao.server"
 // Types
 export type {DailyLog, DailyLogWithFood, Food, User, UserData} from "./types"
 // DAOs — import these in server functions, never in client code

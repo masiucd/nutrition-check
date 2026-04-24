@@ -1,7 +1,8 @@
 import {createServerFn} from "@tanstack/react-start"
 import {z} from "zod"
-import {foodsDao} from "@/db"
+import {foodsDao, foodTypesDao} from "@/db"
 import {foodCategoriesDao, foodCategorySchema} from "@/db/category.dao.server"
+import {foodTypeSchema} from "@/db/type.dao.server"
 import {FoodItemSchema} from "@/db/types"
 
 export const getFoodItems = createServerFn({method: "GET"}).handler(async () => {
@@ -45,6 +46,20 @@ export const getFoodItemsByCategory = createServerFn({method: "GET"})
 		}
 		if (parsedFoodCategories.success) {
 			return {data: parsedFoodCategories.data, error: null}
+		}
+		return {data: [], error: null}
+	})
+
+export const getFoodItemsByType = createServerFn({method: "GET"})
+	.inputValidator(z.object({type: z.string()}))
+	.handler(async ({data}) => {
+		const foods = await foodTypesDao.typesByName(data.type)
+		const parsedFoodTypes = foodTypeSchema.array().safeParse(foods)
+		if (parsedFoodTypes.error) {
+			return {data: [], error: parsedFoodTypes.error.message}
+		}
+		if (parsedFoodTypes.success) {
+			return {data: parsedFoodTypes.data, error: null}
 		}
 		return {data: [], error: null}
 	})

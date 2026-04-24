@@ -24,27 +24,7 @@ function RouteComponent() {
 	const {category} = Route.useParams()
 	const {data, error} = Route.useLoaderData()
 
-	if (error !== null) {
-		return (
-			<PageWrapper>
-				<section className="w-full max-w-3xl rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm">
-					<div className="mb-2 flex items-center gap-2">
-						<span aria-hidden="true" className="inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
-						<Text className="font-medium text-red-800">Something went wrong</Text>
-					</div>
-					<Text className="text-red-700">{error}</Text>
-					<div className="mt-4">
-						<Link
-							to="/food_items"
-							className="inline-flex items-center rounded-lg border border-red-300 bg-white px-3 py-2 font-medium text-red-700 text-sm transition-colors hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2"
-						>
-							Back to food items
-						</Link>
-					</div>
-				</section>
-			</PageWrapper>
-		)
-	}
+	if (error !== null) <ErrorView error={error} />
 
 	const displayCategory = toDisplayCategory(category)
 	const totalItems = data.length
@@ -52,23 +32,31 @@ function RouteComponent() {
 	return (
 		<PageWrapper column>
 			<section className="w-full max-w-4xl">
-				<header className="mb-6 rounded-2xl border bg-card p-6 shadow-sm">
-					<div className="mb-3 flex flex-wrap items-center gap-3">
-						<span className="inline-flex items-center rounded-full border bg-muted px-3 py-1 font-medium text-muted-foreground text-xs uppercase tracking-wide">
-							Category
-						</span>
-						<span className="inline-flex items-center rounded-full border bg-background px-3 py-1 font-medium text-foreground text-xs">
-							{totalItems} {totalItems === 1 ? "item" : "items"}
-						</span>
-					</div>
-					<Heading className="mb-2">{displayCategory}</Heading>
-					<Text className="text-muted-foreground">
-						Browse all food items in this category and select one to view details.
-					</Text>
-				</header>
-				{totalItems === 0 ? <FallbackForNoItems /> : <FoodList foodItems={data} />}
+				<Header totalItems={totalItems} displayCategory={displayCategory} />
+				<div className="mb-5">
+					{totalItems === 0 ? <FallbackForNoItems /> : <FoodList foodItems={data} />}
+				</div>
 			</section>
 		</PageWrapper>
+	)
+}
+
+function Header({totalItems, displayCategory}: {totalItems: number; displayCategory: string}) {
+	return (
+		<header className="mb-6 rounded-2xl border bg-card p-6 shadow-sm">
+			<div className="mb-3 flex flex-wrap items-center gap-3">
+				<span className="inline-flex items-center rounded-full border bg-muted px-3 py-1 font-medium text-muted-foreground text-xs uppercase tracking-wide">
+					Category
+				</span>
+				<span className="inline-flex items-center rounded-full border bg-background px-3 py-1 font-medium text-foreground text-xs">
+					{totalItems} {totalItems === 1 ? "item" : "items"}
+				</span>
+			</div>
+			<Heading className="mb-2">{displayCategory}</Heading>
+			<Text className="text-muted-foreground">
+				Browse all food items in this category and select one to view details.
+			</Text>
+		</header>
 	)
 }
 
@@ -115,5 +103,27 @@ function FallbackForNoItems() {
 				Go to food items
 			</Link>
 		</section>
+	)
+}
+
+function ErrorView({error}: {error: string}) {
+	return (
+		<PageWrapper>
+			<section className="w-full max-w-3xl rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm">
+				<div className="mb-2 flex items-center gap-2">
+					<span aria-hidden="true" className="inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+					<Text className="font-medium text-red-800">Something went wrong</Text>
+				</div>
+				<Text className="text-red-700">{error}</Text>
+				<div className="mt-4">
+					<Link
+						to="/food_items"
+						className="inline-flex items-center rounded-lg border border-red-300 bg-white px-3 py-2 font-medium text-red-700 text-sm transition-colors hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2"
+					>
+						Back to food items
+					</Link>
+				</div>
+			</section>
+		</PageWrapper>
 	)
 }
