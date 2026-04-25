@@ -1,5 +1,5 @@
 import {createFileRoute, Link, useNavigate} from "@tanstack/react-router"
-import {PlusIcon} from "lucide-react"
+import {Pen, PlusIcon, Trash} from "lucide-react"
 import {useMemo} from "react"
 import {Heading, Text} from "@/components/typography"
 import type {BadgeProps} from "@/components/ui/badge"
@@ -315,14 +315,14 @@ function RouteComponent() {
 										<MacroCell value={item.fat_per_unit} />
 									</TableCell>
 									<TableCell className="text-muted-foreground text-xs">{item.unit_label}</TableCell>
-									{isAuthenticated && (
+									{isAuthenticated && user.id === item.user_id && (
 										<TableCell className="text-right font-semibold tabular-nums">
 											<div className="flex gap-2">
-												<Button variant="ghost" size="sm" disabled={user.id !== item.user_id}>
-													Edit {item.food_name}
+												<Button variant="secondary" size="sm" disabled={user.id !== item.user_id}>
+													<Pen size={20} />
 												</Button>
-												<Button variant="ghost" size="sm" disabled={user.id !== item.user_id}>
-													Delete
+												<Button variant="secondary" size="sm" disabled={user.id !== item.user_id}>
+													<Trash size={20} />
 												</Button>
 											</div>
 										</TableCell>
