@@ -1,5 +1,5 @@
 import {useForm} from "@tanstack/react-form"
-import {createFileRoute, useRouter} from "@tanstack/react-router"
+import {createFileRoute, Link, useRouter} from "@tanstack/react-router"
 import {useServerFn} from "@tanstack/react-start"
 import {
 	Apple,
@@ -29,12 +29,14 @@ import {
 	confirmPasswordSchema,
 	currentPasswordSchema,
 	emailSchema,
+	type Food,
 	newPasswordSchema,
 	validate,
 } from "@/lib/schemas"
 import {cn} from "@/lib/utils"
 import {
 	getCurrentUserFn,
+	getFoodItemsFn,
 	getUserProfileFn,
 	updateUserEmailFn,
 	updateUserPasswordFn,
@@ -42,19 +44,21 @@ import {
 } from "@/server/functions/user"
 import {HttpStatusCode} from "@/server/utils/status_code"
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type UserDataRow = NonNullable<Awaited<ReturnType<typeof getUserProfileFn>>["data"]>
-
-// ─── Route ────────────────────────────────────────────────────────────────────
 
 export const Route = createFileRoute("/auth/_authed/profile")({
 	component: RouteComponent,
 	loader: async () => {
-		const [user, profileRes] = await Promise.all([getCurrentUserFn(), getUserProfileFn()])
-		return {user, userData: profileRes.data}
+		const [user, profileRes, foodItems] = await Promise.all([
+			getCurrentUserFn(),
+			getUserProfileFn(),
+			getFoodItemsFn(),
+		])
+
+		return {user, userData: profileRes.data, foodItems: foodItems.data}
 	},
 	pendingComponent: () => {
+		// TODO create a loading spinner
 		return <div>...loading</div>
 	},
 })
@@ -684,7 +688,7 @@ function PersonalDetailsForm({
 }
 
 function RouteComponent() {
-	const {user: fullUser, userData: initialUserData} = Route.useLoaderData()
+	const {user: fullUser, userData: initialUserData, foodItems} = Route.useLoaderData()
 	const ctx = Route.useRouteContext()
 	const [activeTab, setActiveTab] = useState<Tab>("info")
 	const [currentEmail, setCurrentEmail] = useState(ctx.user.email)
@@ -771,6 +775,7 @@ function RouteComponent() {
 						handleEmailUpdate={handleEmailUpdate}
 						userData={userData}
 						setUserData={setUserData}
+						foodItems={foodItems}
 					/>
 				</div>
 			</div>
@@ -778,9 +783,24 @@ function RouteComponent() {
 	)
 }
 
-function FoodItemsList() {
-	// TODO fetch food items from API
-	return <p>Food item list</p>
+function FoodItemsList({foodItems}: {foodItems: Food[]}) {
+	return (
+		<CardContent>
+			<ul>
+				{foodItems.map(food => (
+					<li key={food.id} className="font-semibold">
+						<Link
+							to="/food_items/$foodid"
+							params={{foodid: food.id.toString()}}
+							className="underline underline-offset-2 transition-opacity duration-150 hover:opacity-75"
+						>
+							{food.name}
+						</Link>
+					</li>
+				))}
+			</ul>
+		</CardContent>
+	)
 }
 
 function TabNav({activeTab, setTab}: {activeTab: Tab; setTab: (tab: Tab) => void}) {
@@ -812,12 +832,14 @@ function TabPanels({
 	handleEmailUpdate,
 	userData,
 	setUserData,
+	foodItems,
 }: {
 	activeTab: Tab
 	currentEmail: string
 	handleEmailUpdate: (newEmail: string) => void
 	userData: UserDataRow | null
 	setUserData: (data: UserDataRow | null) => void
+	foodItems: Food[]
 }) {
 	return (
 		<>
@@ -856,9 +878,14 @@ function TabPanels({
 				<Card>
 					<CardHeader>
 						<CardTitle className="text-lg">Foods</CardTitle>
-						<CardDescription>Manage your food items</CardDescription>
+						<CardDescription>
+							Manage your food items{" "}
+							<span className="font-s font-semibold text-muted-foreground text-sm">
+								({foodItems.length})
+							</span>
+						</CardDescription>
 					</CardHeader>
-					<FoodItemsList />
+					<FoodItemsList foodItems={foodItems} />
 				</Card>
 			)}
 		</>

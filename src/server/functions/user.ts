@@ -113,6 +113,8 @@ export const getCurrentUserFn = createServerFn({method: "GET"}).handler(async ()
 	// Redis cache handles repeated lookups — only falls back to the DB on a miss or Redis error
 	try {
 		const cachedUser = await getUserFromCache(userId)
+		// biome-ignore lint/suspicious/noConsole: <explanation>
+		console.log("cachedUser", cachedUser)
 		if (cachedUser !== null) {
 			const parsedUser = UserSchema.safeParse(cachedUser)
 			if (parsedUser.success) {
@@ -251,3 +253,22 @@ export const updateUserProfileFn = createServerFn({method: "POST"})
 		}
 		return {error: null, data: updated, status: HttpStatusCode.OK}
 	})
+
+// Function to get users foodItems
+export const getFoodItemsFn = createServerFn({method: "GET"}).handler(async () => {
+	const session = await getAppSession()
+	const userId = session.data.userId
+	if (!userId) {
+		return {error: "Not authenticated", data: [], status: HttpStatusCode.UNAUTHORIZED}
+	}
+	try {
+		const myFoodItems = await usersDao.findAllFoodItems(userId)
+		return {error: null, data: myFoodItems, status: HttpStatusCode.OK}
+	} catch (_e) {
+		return {
+			error: "Failed to fetch food items",
+			data: [],
+			status: HttpStatusCode.INTERNAL_SERVER_ERROR,
+		}
+	}
+})

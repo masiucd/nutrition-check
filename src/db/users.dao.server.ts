@@ -3,7 +3,7 @@
 
 import type {AwaitNullable} from "@/lib/types"
 import {sql} from "./index"
-import type {User} from "./types"
+import type {Food, User} from "./types"
 
 export const usersDao = {
 	/** Find a user by their email address. Returns undefined if not found. */
@@ -44,7 +44,7 @@ export const usersDao = {
 			RETURNING id,
 			  email,
 			  password,
-			  is_admin,	
+			  is_admin,
 			  created_at
 		`
 		return firstItemOrNull(rows)
@@ -78,6 +78,22 @@ export const usersDao = {
 			  created_at
 		`
 		return firstItemOrNull(rows)
+	},
+
+	// function to get all users food items
+	async findAllFoodItems(userId: number): Promise<Food[]> {
+		const rows = await sql<Food[]>`
+			SELECT id,
+			  user_id,
+			  name,
+			  calories_per_unit,
+			  unit_label,
+			  created_at,
+			  updated_at
+			FROM foods
+			WHERE user_id = ${userId}
+		`
+		return rows
 	},
 }
 
