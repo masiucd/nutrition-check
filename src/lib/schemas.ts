@@ -33,7 +33,7 @@ export const UserSchema = z.object({
 	email: z.string(),
 	password: z.string(),
 	is_admin: z.boolean(),
-	created_at: z.date(),
+	created_at: z.string().or(z.date()), // or a string,
 })
 
 export const FoodCategoryNameSchema = z.enum([
