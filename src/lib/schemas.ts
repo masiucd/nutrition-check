@@ -184,3 +184,7 @@ export type FoodCategoryName = z.infer<typeof FoodCategoryNameSchema>
 export type FoodTypeName = z.infer<typeof FoodTypeNameSchema>
 export type FoodCategoryRow = z.infer<typeof FoodCategoryRowSchema>
 export type FoodTypeRow = z.infer<typeof FoodTypeRowSchema>
+
+// Special types
+// ─── Context user type ──────────────────────────────────────────────────────────
+export type ContextUser = Pick<User, "id" | "email" | "is_admin"> | null

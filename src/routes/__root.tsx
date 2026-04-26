@@ -16,13 +16,11 @@ import {Flame, LogOut, UserIcon} from "lucide-react"
 import type {PropsWithChildren} from "react"
 import {Button} from "@/components/ui/button"
 import {appData} from "@/config"
-import type {User} from "@/db"
 import {todayUtc} from "@/lib/date"
+import type {ContextUser} from "@/lib/schemas"
 import {cn} from "@/lib/utils"
 import {getCurrentUserFn, logoutFn} from "@/server/functions/user"
 import appCss from "../styles.css?url"
-
-type ContextUser = Pick<User, "id" | "email" | "is_admin"> | null
 
 export const Route = createRootRoute({
 	head: () => ({
