@@ -109,12 +109,9 @@ export const getCurrentUserFn = createServerFn({method: "GET"}).handler(async ()
 	if (!userId) {
 		return null
 	}
-
 	// Redis cache handles repeated lookups — only falls back to the DB on a miss or Redis error
 	try {
 		const cachedUser = await getUserFromCache(userId)
-		// biome-ignore lint/suspicious/noConsole: <explanation>
-		console.log("cachedUser", cachedUser)
 		if (cachedUser !== null) {
 			const parsedUser = UserSchema.safeParse(cachedUser)
 			if (parsedUser.success) {
