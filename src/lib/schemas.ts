@@ -34,6 +34,8 @@ export const UserSchema = z.object({
 	password: z.string(),
 	is_admin: z.boolean(),
 	created_at: z.string().or(z.date()), // or a string,
+	first_name: z.string().optional(),
+	last_name: z.string().optional(),
 })
 
 export const FoodCategoryNameSchema = z.enum([
@@ -187,4 +189,7 @@ export type FoodTypeRow = z.infer<typeof FoodTypeRowSchema>
 
 // Special types
 // ─── Context user type ──────────────────────────────────────────────────────────
-export type ContextUser = Pick<User, "id" | "email" | "is_admin"> | null
+export type ContextUser = Pick<
+	User,
+	"id" | "email" | "is_admin" | "first_name" | "last_name"
+> | null

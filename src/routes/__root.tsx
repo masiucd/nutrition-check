@@ -53,6 +53,8 @@ export const Route = createRootRoute({
 				id: user.id,
 				email: user.email,
 				is_admin: user.is_admin,
+				first_name: user.first_name,
+				last_name: user.last_name,
 			} satisfies ContextUser,
 		}
 	},
@@ -120,12 +122,18 @@ function Header(props: {user: ContextUser}) {
 
 function NavLinks(props: {user: ContextUser}) {
 	if (!props.user) return <UnauthenticatedNavLinks />
-	return <AuthenticatedNavLinks email={props.user.email} />
+	return <AuthenticatedNavLinks user={props.user} />
 }
 
-function AuthenticatedNavLinks({email}: {email: string}) {
+function createInitials(user: ContextUser) {
+	if (user?.first_name && user?.last_name)
+		return `${user.first_name[0].toUpperCase()}${user.last_name[0].toUpperCase()}`
+	return user?.email?.[0].toUpperCase()
+}
+
+function AuthenticatedNavLinks({user}: {user: ContextUser}) {
 	const logout = useServerFn(logoutFn)
-	const initial = email[0].toUpperCase()
+	const initial = createInitials(user)
 
 	return (
 		<ul className="flex items-center gap-1">

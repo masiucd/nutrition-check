@@ -24,13 +24,17 @@ export const usersDao = {
 	/** Find a user by their primary key. Returns null if not found. */
 	async findById(id: number): AwaitNullable<User> {
 		const rows = await sql<User[]>`
-			SELECT id,
+			SELECT
+		    id,
 			  email,
 			  password,
 			  is_admin,
-			  created_at
-			FROM users
-			WHERE id = ${id}
+			  created_at,
+			  ud.first_name,
+			  ud.last_name
+			FROM users u
+			LEFT JOIN users_data ud ON u.id = ud.user_id
+			WHERE u.id = ${id}
 			LIMIT 1
 		`
 		return firstItemOrNull(rows)
