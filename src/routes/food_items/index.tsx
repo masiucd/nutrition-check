@@ -33,32 +33,27 @@ type FoodItemsSearch = {
 	categories?: FoodCategoryName[]
 }
 
+// ---- Helpers ---------------------------------------------------------------
+
+function toValidArray<T extends string>(value: unknown, options: readonly T[]): T[] {
+	const raw = Array.isArray(value) ? value : typeof value === "string" ? [value] : []
+	return raw
+		.filter((v): v is string => typeof v === "string")
+		.filter((v): v is T => options.includes(v as T))
+}
+
+function toggle<T>(arr: T[], value: T): T[] {
+	return arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value]
+}
+
+// ---- Route -----------------------------------------------------------------
+
 export const Route = createFileRoute("/food_items/")({
 	component: RouteComponent,
 	validateSearch: (search: Record<string, unknown>): FoodItemsSearch => {
 		const q = typeof search.q === "string" ? search.q : undefined
-
-		const rawTypes = Array.isArray(search.types)
-			? search.types
-			: typeof search.types === "string"
-				? [search.types]
-				: []
-
-		const rawCategories = Array.isArray(search.categories)
-			? search.categories
-			: typeof search.categories === "string"
-				? [search.categories]
-				: []
-
-		const types = rawTypes
-			.filter((value): value is string => typeof value === "string")
-			.filter((value): value is FoodTypeName => FOOD_TYPES.includes(value as FoodTypeName))
-
-		const categories = rawCategories
-			.filter((value): value is string => typeof value === "string")
-			.filter((value): value is FoodCategoryName =>
-				FOOD_CATEGORIES.includes(value as FoodCategoryName),
-			)
+		const types = toValidArray(search.types, FOOD_TYPES)
+		const categories = toValidArray(search.categories, FOOD_CATEGORIES)
 
 		return {
 			...(q ? {q} : {}),
@@ -82,33 +77,18 @@ export const Route = createFileRoute("/food_items/")({
 	},
 })
 
-function RouteComponent() {
-	const {user, foodItems} = Route.useLoaderData()
+// ---- Hook ------------------------------------------------------------------
+
+function useFoodFilters() {
 	const search = Route.useSearch()
 	const navigate = useNavigate({from: Route.fullPath})
-	const isAuthenticated = user !== null
 
 	const q = search.q ?? ""
 	const selectedTypes = search.types ?? []
 	const selectedCategories = search.categories ?? []
 
-	const filteredItems = useMemo(() => {
-		const text = q.trim().toLowerCase()
-
-		return foodItems.data.filter(item => {
-			const matchesText = text.length === 0 || item.food_name.toLowerCase().includes(text)
-			const matchesType =
-				selectedTypes.length === 0 || selectedTypes.some(type => type === item.food_type)
-			const matchesCategory =
-				selectedCategories.length === 0 ||
-				selectedCategories.some(category => category === item.food_category)
-
-			return matchesText && matchesType && matchesCategory
-		})
-	}, [foodItems.data, q, selectedTypes, selectedCategories])
-
-	const updateSearch = (next: Partial<FoodItemsSearch>) => {
-		void navigate({
+	const update = (next: Partial<FoodItemsSearch>) => {
+		navigate({
 			search: prev => {
 				const nextQ = next.q ?? prev.q ?? ""
 				const nextTypes = next.types ?? prev.types ?? []
@@ -124,28 +104,72 @@ function RouteComponent() {
 		})
 	}
 
-	const toggleType = (value: FoodTypeName) => {
-		const nextTypes = selectedTypes.includes(value)
-			? selectedTypes.filter(type => type !== value)
-			: [...selectedTypes, value]
+	const reset = () => navigate({search: () => ({}), replace: true})
 
-		updateSearch({types: nextTypes})
+	return {
+		q,
+		selectedTypes,
+		selectedCategories,
+		onSearchChange: (value: string) => update({q: value}),
+		toggleType: (value: FoodTypeName) => update({types: toggle(selectedTypes, value)}),
+		toggleCategory: (value: FoodCategoryName) =>
+			update({categories: toggle(selectedCategories, value)}),
+		reset,
 	}
+}
 
-	const toggleCategory = (value: FoodCategoryName) => {
-		const nextCategories = selectedCategories.includes(value)
-			? selectedCategories.filter(category => category !== value)
-			: [...selectedCategories, value]
+// ---- Sub-components --------------------------------------------------------
 
-		updateSearch({categories: nextCategories})
-	}
+type FilterGroupProps<T extends string> = {
+	label: string
+	options: readonly T[]
+	selected: T[]
+	onToggle: (value: T) => void
+}
 
-	const resetFilters = () => {
-		void navigate({
-			search: () => ({}),
-			replace: true,
+function FilterGroup<T extends string>({label, options, selected, onToggle}: FilterGroupProps<T>) {
+	return (
+		<div>
+			<Text size="muted" className="mb-2">
+				{label}
+			</Text>
+			<div className="flex flex-wrap gap-3">
+				{options.map(option => (
+					<label key={option} className="flex items-center gap-2 text-sm">
+						<input
+							type="checkbox"
+							checked={selected.includes(option)}
+							onChange={() => onToggle(option)}
+						/>
+						{option}
+					</label>
+				))}
+			</div>
+		</div>
+	)
+}
+
+// ---- Route Component -------------------------------------------------------
+
+function RouteComponent() {
+	const {user, foodItems} = Route.useLoaderData()
+	const {q, selectedTypes, selectedCategories, onSearchChange, toggleType, toggleCategory, reset} =
+		useFoodFilters()
+
+	const filteredItems = useMemo(() => {
+		const text = q.trim().toLowerCase()
+
+		return foodItems.data.filter(item => {
+			const matchesText = !text || item.food_name.toLowerCase().includes(text)
+			const matchesType =
+				!selectedTypes.length || selectedTypes.includes(item.food_type as FoodTypeName)
+			const matchesCategory =
+				!selectedCategories.length ||
+				selectedCategories.includes(item.food_category as FoodCategoryName)
+
+			return matchesText && matchesType && matchesCategory
 		})
-	}
+	}, [foodItems.data, q, selectedTypes, selectedCategories])
 
 	return (
 		<PageWrapper column className="items-start gap-6 py-8">
@@ -166,61 +190,39 @@ function RouteComponent() {
 						</Text>
 						<Input
 							value={q}
-							onChange={event => updateSearch({q: event.target.value})}
+							onChange={e => onSearchChange(e.target.value)}
 							placeholder="Filter by food name..."
 						/>
 					</div>
 
 					<div className="grid gap-4 md:grid-cols-2">
-						<div>
-							<Text size="muted" className="mb-2">
-								Type
-							</Text>
-							<div className="flex flex-wrap gap-3">
-								{FOOD_TYPES.map(foodType => (
-									<label key={foodType} className="flex items-center gap-2 text-sm">
-										<input
-											type="checkbox"
-											checked={selectedTypes.includes(foodType)}
-											onChange={() => toggleType(foodType)}
-										/>
-										{foodType}
-									</label>
-								))}
-							</div>
-						</div>
-
-						<div>
-							<Text size="muted" className="mb-2">
-								Category
-							</Text>
-							<div className="flex flex-wrap gap-3">
-								{FOOD_CATEGORIES.map(foodCategory => (
-									<label key={foodCategory} className="flex items-center gap-2 text-sm">
-										<input
-											type="checkbox"
-											checked={selectedCategories.includes(foodCategory)}
-											onChange={() => toggleCategory(foodCategory)}
-										/>
-										{foodCategory}
-									</label>
-								))}
-							</div>
-						</div>
+						<FilterGroup
+							label="Type"
+							options={FOOD_TYPES}
+							selected={selectedTypes}
+							onToggle={toggleType}
+						/>
+						<FilterGroup
+							label="Category"
+							options={FOOD_CATEGORIES}
+							selected={selectedCategories}
+							onToggle={toggleCategory}
+						/>
 					</div>
 
 					<div className="flex flex-wrap items-center gap-2">
-						<Button variant="outline" onClick={resetFilters}>
+						<Button variant="outline" onClick={reset}>
 							Reset
 						</Button>
 
-						{isAuthenticated && (
+						{user !== null && (
 							<Button className="md:ml-auto">
 								New Food Item <PlusIcon />
 							</Button>
 						)}
 					</div>
 				</div>
+
 				<FoodTable items={filteredItems} user={user} />
 			</section>
 		</PageWrapper>
