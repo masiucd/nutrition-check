@@ -252,7 +252,7 @@ export const updateUserProfileFn = createServerFn({method: "POST"})
 	})
 
 // Function to get users foodItems
-export const getFoodItemsFn = createServerFn({method: "GET"}).handler(async () => {
+export const getUsersFoodItemsFn = createServerFn({method: "GET"}).handler(async () => {
 	const session = await getAppSession()
 	const userId = session.data.userId
 	if (!userId) {

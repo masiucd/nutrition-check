@@ -8,7 +8,7 @@ import {formatDate, getInitials} from "@/components/profile/utils"
 import {Card, CardContent} from "@/components/ui/card"
 import {PageWrapper} from "@/components/wrappers/page"
 import type {UserData} from "@/lib/schemas"
-import {getCurrentUserFn, getFoodItemsFn, getUserProfileFn} from "@/server/functions/user"
+import {getCurrentUserFn, getUserProfileFn, getUsersFoodItemsFn} from "@/server/functions/user"
 
 export const Route = createFileRoute("/auth/_authed/profile")({
 	component: RouteComponent,
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/auth/_authed/profile")({
 		const [user, profileRes, foodItems] = await Promise.all([
 			getCurrentUserFn(),
 			getUserProfileFn(),
-			getFoodItemsFn(),
+			getUsersFoodItemsFn(),
 		])
 
 		return {user, userData: profileRes.data, foodItems: foodItems.data}
