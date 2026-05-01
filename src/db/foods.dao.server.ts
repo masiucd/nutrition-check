@@ -73,22 +73,55 @@ export const foodsDao = {
 	/** Insert a new food item. Returns the created row. */
 	async create(
 		userId: number,
-		name: string,
-		caloriesPerUnit: number,
-		unitLabel = "serving",
+		fields: {
+			name: string
+			caloriesPerUnit: number
+			proteinPerUnit?: number
+			carbsPerUnit?: number
+			fatPerUnit?: number
+			unitLabel?: string
+			categoryName?: string | null
+			typeName?: string | null
+		},
 	): Promise<Food> {
+		let categoryId: number | null = null
+		if (fields.categoryName) {
+			const cats = await sql<{id: number}[]>`
+				SELECT id FROM food_categories WHERE name = ${fields.categoryName}
+			`
+			categoryId = cats[0]?.id ?? null
+		}
+
+		let typeId: number | null = null
+		if (fields.typeName) {
+			const types = await sql<{id: number}[]>`
+				SELECT id FROM food_types WHERE name = ${fields.typeName}
+			`
+			typeId = types[0]?.id ?? null
+		}
+
 		const rows = await sql<Food[]>`
 			INSERT INTO foods (
 				user_id,
+				category_id,
+				type_id,
 				name,
 				calories_per_unit,
+				protein_per_unit,
+				carbs_per_unit,
+				fat_per_unit,
 				unit_label
 			)
 			VALUES (
 				${userId},
-				${name},
-				${caloriesPerUnit},
-				${unitLabel}
+				${categoryId},
+				${typeId},
+				${fields.name},
+				${fields.caloriesPerUnit},
+				${fields.proteinPerUnit ?? 0},
+				${fields.carbsPerUnit ?? 0},
+				${fields.fatPerUnit ?? 0},
+				${fields.unitLabel ?? "serving"}
 			)
 			RETURNING *
 		`

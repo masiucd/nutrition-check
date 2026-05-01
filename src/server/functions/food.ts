@@ -1,6 +1,7 @@
 import {createServerFn} from "@tanstack/react-start"
 import {foodCategoriesDao, foodsDao, foodTypesDao} from "@/db"
 import {
+	CreateFoodItemSchema,
 	FoodCategoryRowSchema,
 	FoodItemSchema,
 	FoodTypeRowSchema,
@@ -8,6 +9,8 @@ import {
 	GetFoodItemsByCategorySchema,
 	GetFoodItemsByTypeSchema,
 } from "@/lib/schemas"
+import {getAppSession} from "@/server/utils/session"
+import {HttpStatusCode} from "@/server/utils/status_code"
 
 export const getFoodItems = createServerFn({method: "GET"}).handler(async () => {
 	const foods = await foodsDao.getAllFoods()
@@ -66,4 +69,38 @@ export const getFoodItemsByType = createServerFn({method: "GET"})
 			return {data: parsedFoodTypes.data, error: null}
 		}
 		return {data: [], error: null}
+	})
+
+export const createFoodItem = createServerFn({method: "POST"})
+	.inputValidator(CreateFoodItemSchema)
+	.handler(async ({data}) => {
+		const session = await getAppSession()
+		const userId = session.data.userId
+
+		if (!userId) {
+			return {data: null, error: "Unauthenticated", status: HttpStatusCode.UNAUTHORIZED}
+		}
+
+		try {
+			const food = await foodsDao.create(userId, {
+				name: data.name,
+				caloriesPerUnit: data.caloriesPerUnit,
+				proteinPerUnit: data.proteinPerUnit,
+				carbsPerUnit: data.carbsPerUnit,
+				fatPerUnit: data.fatPerUnit,
+				unitLabel: data.unitLabel,
+				categoryName: data.categoryName ?? null,
+				typeName: data.typeName ?? null,
+			})
+
+			return {data: food, error: null, status: HttpStatusCode.OK}
+		} catch (e) {
+			// biome-ignore lint/suspicious/noConsole: <logging error>
+			console.error(e)
+			return {
+				data: null,
+				error: e instanceof Error ? e.message : "Failed to create food item",
+				status: HttpStatusCode.INTERNAL_SERVER_ERROR,
+			}
+		}
 	})

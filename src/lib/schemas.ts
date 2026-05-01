@@ -146,6 +146,17 @@ export const LoginUserSchema = z.object({
 
 export const GetFoodItemSchema = z.object({id: z.number()})
 
+export const CreateFoodItemSchema = z.object({
+	name: z.string().min(1, "Name is required"),
+	caloriesPerUnit: z.number().min(0, "Calories must be 0 or more"),
+	proteinPerUnit: z.number().min(0, "Must be 0 or more").optional(),
+	carbsPerUnit: z.number().min(0, "Must be 0 or more").optional(),
+	fatPerUnit: z.number().min(0, "Must be 0 or more").optional(),
+	unitLabel: z.string().min(1, "Unit label cannot be empty").optional(),
+	categoryName: FoodCategoryNameSchema.optional(),
+	typeName: FoodTypeNameSchema.optional(),
+})
+
 export const GetFoodItemsByCategorySchema = z.object({category: z.string()})
 
 export const GetFoodItemsByTypeSchema = z.object({type: z.string()})
@@ -186,6 +197,7 @@ export type FoodCategoryName = z.infer<typeof FoodCategoryNameSchema>
 export type FoodTypeName = z.infer<typeof FoodTypeNameSchema>
 export type FoodCategoryRow = z.infer<typeof FoodCategoryRowSchema>
 export type FoodTypeRow = z.infer<typeof FoodTypeRowSchema>
+export type CreateFoodItem = z.infer<typeof CreateFoodItemSchema>
 
 // Special types
 // ─── Context user type ──────────────────────────────────────────────────────────
