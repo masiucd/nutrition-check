@@ -25,17 +25,17 @@ export const usersDao = {
 	async findById(id: number): AwaitNullable<User> {
 		const rows = await sql<User[]>`
 			SELECT
-		    id,
-			  email,
-			  password,
-			  is_admin,
-			  created_at,
-			  ud.first_name,
-			  ud.last_name
-			FROM users u
-			LEFT JOIN users_data ud ON u.id = ud.user_id
-			WHERE u.id = ${id}
-			LIMIT 1
+            u.id,
+            u.email,
+            u.password,
+            u.is_admin,
+            created_at,
+            ud.first_name,
+            ud.last_name
+   			FROM users u
+   			LEFT JOIN users_data ud ON u.id = ud.id
+   			WHERE u.id = ${id}
+   			LIMIT 1
 		`
 		return firstItemOrNull(rows)
 	},
