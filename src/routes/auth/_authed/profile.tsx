@@ -1,30 +1,32 @@
 import {createFileRoute, useRouter} from "@tanstack/react-router"
-import {Calendar, Mail, ShieldCheck, User} from "lucide-react"
+import {Calendar, Mail, ShieldCheck, User as UserIcon} from "lucide-react"
 import {useState} from "react"
+import {PageSkeleton} from "@/components/common/page-skeleton"
 import {TabNav} from "@/components/profile/tab-nav"
 import {TabPanels} from "@/components/profile/tab-panels"
 import type {Tab} from "@/components/profile/types"
 import {formatDate, getInitials} from "@/components/profile/utils"
 import {Card, CardContent} from "@/components/ui/card"
 import {PageWrapper} from "@/components/wrappers/page"
-import type {UserData} from "@/lib/schemas"
+import type {Food, User, UserData} from "@/lib/schemas"
 import {getCurrentUserFn, getUserProfileFn, getUsersFoodItemsFn} from "@/server/functions/user"
 
 export const Route = createFileRoute("/auth/_authed/profile")({
 	component: RouteComponent,
 	loader: async () => {
-		const [user, profileRes, foodItems] = await Promise.all([
+		const [userResult, profileResult, foodItemsResult] = await Promise.allSettled([
 			getCurrentUserFn(),
 			getUserProfileFn(),
 			getUsersFoodItemsFn(),
 		])
 
-		return {user, userData: profileRes.data, foodItems: foodItems.data}
+		const user = userResult.status === "fulfilled" ? userResult.value : null
+		const profileRes = profileResult.status === "fulfilled" ? profileResult.value : null
+		const foodItems = foodItemsResult.status === "fulfilled" ? foodItemsResult.value : null
+
+		return {user, userData: profileRes?.data ?? null, foodItems: foodItems?.data ?? []}
 	},
-	pendingComponent: () => {
-		// TODO create a loading spinner
-		return <div>...loading</div>
-	},
+	pendingComponent: PageSkeleton,
 })
 
 function RouteComponent() {
@@ -84,41 +86,83 @@ function RouteComponent() {
 					</CardContent>
 				</Card>
 
-				{/* ── Stat pills ── */}
-				<div className="grid grid-cols-2 gap-3">
-					<div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
-						<div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-							<User className="size-4 text-primary" />
-						</div>
-						<div>
-							<p className="text-muted-foreground text-xs">Account ID</p>
-							<p className="font-semibold text-sm">#{fullUser.id}</p>
-						</div>
-					</div>
-					<div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
-						<div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-							<Mail className="size-4 text-primary" />
-						</div>
-						<div className="min-w-0">
-							<p className="text-muted-foreground text-xs">Email</p>
-							<p className="truncate font-semibold text-sm">{currentEmail}</p>
-						</div>
-					</div>
-				</div>
+				<StatPills fullUser={fullUser} currentEmail={currentEmail} />
 
 				{/* ── Settings tabs ── */}
-				<div>
-					<TabNav activeTab={activeTab} setTab={(tab: Tab) => setActiveTab(tab)} />
-					<TabPanels
-						activeTab={activeTab}
-						currentEmail={currentEmail}
-						handleEmailUpdate={handleEmailUpdate}
-						userData={userData}
-						setUserData={setUserData}
-						foodItems={foodItems ?? []}
-					/>
-				</div>
+				<Tabs
+					activeTab={activeTab}
+					setTab={setActiveTab}
+					currentEmail={currentEmail}
+					handleEmailUpdate={handleEmailUpdate}
+					userData={userData}
+					setUserData={setUserData}
+					foodItems={foodItems ?? []}
+				/>
 			</div>
 		</PageWrapper>
+	)
+}
+
+interface StatPillsProps {
+	fullUser: User
+	currentEmail: string
+}
+
+function StatPills({fullUser, currentEmail}: StatPillsProps) {
+	return (
+		<div className="grid grid-cols-2 gap-3">
+			<div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+				<div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
+					<UserIcon className="size-4 text-primary" />
+				</div>
+				<div>
+					<p className="text-muted-foreground text-xs">Account ID</p>
+					<p className="font-semibold text-sm">#{fullUser.id}</p>
+				</div>
+			</div>
+			<div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+				<div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
+					<Mail className="size-4 text-primary" />
+				</div>
+				<div className="min-w-0">
+					<p className="text-muted-foreground text-xs">Email</p>
+					<p className="truncate font-semibold text-sm">{currentEmail}</p>
+				</div>
+			</div>
+		</div>
+	)
+}
+
+interface TabsProps {
+	activeTab: Tab
+	setTab: (tab: Tab) => void
+	currentEmail: string
+	handleEmailUpdate: (email: string) => void
+	userData: UserData | null
+	setUserData: React.Dispatch<React.SetStateAction<UserData | null>>
+	foodItems: Food[]
+}
+
+function Tabs({
+	activeTab,
+	setTab,
+	currentEmail,
+	handleEmailUpdate,
+	userData,
+	setUserData,
+	foodItems,
+}: TabsProps) {
+	return (
+		<div>
+			<TabNav activeTab={activeTab} setTab={(tab: Tab) => setTab(tab)} />
+			<TabPanels
+				activeTab={activeTab}
+				currentEmail={currentEmail}
+				handleEmailUpdate={handleEmailUpdate}
+				userData={userData}
+				setUserData={setUserData}
+				foodItems={foodItems ?? []}
+			/>
+		</div>
 	)
 }

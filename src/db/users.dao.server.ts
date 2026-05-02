@@ -1,9 +1,10 @@
 // src/db/users.dao.ts
 // SERVER-ONLY
 
+import {FoodSchema} from "@/lib/schemas"
 import type {AwaitNullable} from "@/lib/types"
 import {sql} from "./index"
-import type {Food, User} from "./types"
+import type {User} from "./types"
 
 export const usersDao = {
 	/** Find a user by their email address. Returns undefined if not found. */
@@ -85,8 +86,8 @@ export const usersDao = {
 	},
 
 	// function to get all users food items
-	async findAllFoodItems(userId: number): Promise<Food[]> {
-		const rows = await sql<Food[]>`
+	async findAllFoodItems(userId: number) {
+		const rows = await sql`
 			SELECT id,
 			  user_id,
 			  name,
@@ -97,7 +98,8 @@ export const usersDao = {
 			FROM foods
 			WHERE user_id = ${userId}
 		`
-		return rows
+		const parsed = FoodSchema.array().safeParse(rows)
+		return parsed.success ? parsed.data : []
 	},
 }
 
