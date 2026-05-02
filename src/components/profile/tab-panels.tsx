@@ -1,6 +1,7 @@
 import {Card, CardDescription, CardHeader, CardTitle} from "@/components/ui/card"
 import type {Food, UserData} from "@/lib/schemas"
 import {ChangePasswordForm} from "./change-password-form"
+import {CreateFoodItemForm} from "./create-food-item-form"
 import {EditEmailForm} from "./edit-email-form"
 import {FoodItemsList} from "./food-items-list"
 import {PersonalDetailsForm} from "./personal-details-form"
@@ -56,18 +57,30 @@ export function TabPanels({
 			)}
 
 			{activeTab === "foods" && (
-				<Card>
-					<CardHeader>
-						<CardTitle className="text-lg">Foods</CardTitle>
-						<CardDescription>
-							Manage your food items{" "}
-							<span className="font-s font-semibold text-muted-foreground text-sm">
-								({foodItems.length})
-							</span>
-						</CardDescription>
-					</CardHeader>
-					<FoodItemsList foodItems={foodItems} />
-				</Card>
+				<div className="flex flex-col gap-4">
+					<Card>
+						<CardHeader>
+							<CardTitle className="text-lg">Foods</CardTitle>
+							<CardDescription>
+								Manage your food items{" "}
+								<span className="font-s font-semibold text-muted-foreground text-sm">
+									({foodItems.length})
+								</span>
+							</CardDescription>
+						</CardHeader>
+						<FoodItemsList foodItems={foodItems} />
+					</Card>
+
+					<Card className="shadow-sm">
+						<CardHeader>
+							<CardTitle className="text-lg">Add food item</CardTitle>
+							<CardDescription>
+								Fill in the nutritional details. Name and calories are required.
+							</CardDescription>
+						</CardHeader>
+						<CreateFoodItemForm />
+					</Card>
+				</div>
 			)}
 		</>
 	)
