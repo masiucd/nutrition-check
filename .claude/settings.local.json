@@ -1,7 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pnpm typecheck *)"
+      "Bash(pnpm typecheck*)",
+      "Bash(pnpm test*)",
+      "Bash(pnpm check*)",
+      "Bash(pnpm lint*)",
+      "Bash(pnpm format*)",
+      "Bash(pnpm migrate:up)",
+      "Bash(pnpm migrate:down)",
+      "Bash(pnpm migrate:status)",
+      "Bash(pnpm migrate:new *)",
+      "Bash(pnpm build*)",
+      "Bash(git *)",
+      "Bash(find * -type f*)",
+      "Bash(find * -name *)",
+      "Bash(ls*)",
+      "Bash(grep*)"
     ]
   }
 }

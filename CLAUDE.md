@@ -32,9 +32,12 @@ src/
 ├── db/
 │   ├── index.ts              # postgres sql client + barrel re-export of all DAOs and types
 │   ├── types.ts              # Row types: User, Food, DailyLog, DailyLogWithFood
-│   ├── users.dao.ts          # findByEmail, findById, create, updatePassword, updateEmail
-│   ├── foods.dao.ts          # search, findAll, findById, create, update, delete
-│   └── daily-logs.dao.ts     # findByDate, findById, create, update, delete, dailyTotals
+│   ├── users.dao.server.ts       # findByEmail, findById, create, updatePassword, updateEmail
+│   ├── foods.dao.server.ts       # getAllFoods, findAllForUser, findById, create, update, delete
+│   ├── daily_logs.dao.server.ts  # findByDate, findById, create, update, delete, dailyTotals
+│   ├── user_data.dao.server.ts   # findById, upsert
+│   ├── category.dao.server.ts    # categoriesByName, all
+│   └── type.dao.server.ts        # typesByName, all
 ├── server/
 │   ├── functions/
 │   │   └── user.ts           # createUser, loginUser, logoutFn, getCurrentUserFn, updateUserEmailFn, updateUserPasswordFn
@@ -78,10 +81,21 @@ db/
 ## Database schema
 
 ```
-users        — id, email, password (bcrypt), created_at
-foods        — id, user_id, name, calories_per_unit, unit_label, created_at, updated_at
-daily_logs   — id, user_id, food_id, log_date (DATE), meal (breakfast|lunch|dinner|snacks),
-               quantity, calories, created_at, updated_at
+users             — id, email, password (bcrypt), is_admin, created_at
+users_data        — id (FK → users.id CASCADE), age, gender, first_name, last_name,
+                    occupation, height (cm), weight (kg), city, country, updated_at
+foods             — id, user_id, food_name, calories_per_unit, protein_per_unit,
+                    carbs_per_unit, fat_per_unit, unit_label,
+                    category_id (FK → food_categories), type_id (FK → food_types),
+                    created_at, updated_at
+food_categories   — id, category_name
+                    values: Fruit, Vegetable, Meat, Dairy, Grains, Legumes,
+                            Nuts & Seeds, Snacks, Seafood
+food_types        — id, type_name
+                    values: Whole Food, Semi-Processed, Processed
+daily_logs        — id, user_id, food_id, log_date (DATE "YYYY-MM-DD"),
+                    meal (breakfast|lunch|dinner|snacks), quantity, calories,
+                    created_at, updated_at
 ```
 
 ---
@@ -90,7 +104,7 @@ daily_logs   — id, user_id, food_id, log_date (DATE), meal (breakfast|lunch|di
 
 ### DAOs are the only database layer
 
-All SQL lives in `src/db/*.dao.ts`. Server functions call DAOs. Nothing else touches `sql` directly.
+All SQL lives in `src/db/*.dao.server.ts`. Server functions call DAOs. Nothing else touches `sql` directly.
 
 ```ts
 // Correct
@@ -190,7 +204,7 @@ return { error: null, data: result, status: HttpStatusCode.OK }
 2. Get session → check userId → call DAO → return `{ error, data, status }`
 
 **Add a new DAO method:**
-1. Add method to the relevant `src/db/*.dao.ts`
+1. Add method to the relevant `src/db/*.dao.server.ts`
 2. If it returns a new shape, add the type to `src/db/types.ts`
 3. Re-export from `src/db/index.ts` if it's a new type
 
@@ -206,3 +220,123 @@ pnpm migrate:up
 # Start Postgres (port 5444) and Redis (port 6379) first
 pnpm dev
 ```
+
+---
+
+## Date & time handling (CRITICAL)
+
+All date/time work uses `@js-temporal/polyfill`. **Never use `new Date()` or `Date.now()` for logic.**
+
+Import exclusively from `@/lib/date` — never directly from the polyfill:
+
+```ts
+// Correct
+import { todayUtc, todayIso, plainDateFromIso } from "@/lib/date"
+
+// Wrong
+import { Temporal } from "@js-temporal/polyfill"
+```
+
+DB boundary contracts:
+- `log_date` → plain ISO string `"YYYY-MM-DD"` — use `todayIso()`, `plainDateFromIso()`, `isoFromPlainDate()`
+- `created_at` / `updated_at` → JS `Date` from postgres driver — convert with `instantFromJsDate()` or `utcZonedFromJsDate()`
+- All arithmetic is UTC-only. Conversions happen at the server function layer, not inside DAOs.
+
+Key exports from `@/lib/date`: `todayUtc()`, `nowUtc()`, `todayIso()`, `plainDateFromIso()`,
+`isoFromPlainDate()`, `instantFromJsDate()`, `utcZonedFromJsDate()`, `plainDateFromJsDate()`,
+`formatDate()`, `formatDateLong()`, `formatDateShort()`, `formatDateTime()`,
+`addDays()`, `subtractDays()`, `addMonths()`, `startOfMonth()`, `endOfMonth()`,
+`isToday()`, `isBefore()`, `isAfter()`, `isSameDay()`, `dateRangeIso()`, `datesBetween()`, `nDaysAgoIso()`
+
+---
+
+## Zod validation
+
+All types are inferred from schemas in `src/lib/schemas.ts` — never write types that duplicate schema structure.
+
+```ts
+export const CreateFoodItemSchema = z.object({ ... })
+export type CreateFoodItem = z.infer<typeof CreateFoodItemSchema>
+```
+
+Use the `validate()` helper with `@tanstack/react-form` field validators:
+
+```ts
+import { validate, emailSchema } from "@/lib/schemas"
+
+validators: {
+  onBlur: ({ value }) => validate(emailSchema, value),
+}
+```
+
+Server functions use `.safeParse()` for full input validation before calling DAOs.
+
+---
+
+## Testing
+
+Stack: Vitest + Testing Library + jsdom. Setup file: `src/test/setup.ts`.
+
+```sh
+pnpm test          # run once
+pnpm test --watch  # watch mode
+```
+
+Test files are co-located with source as `*.test.ts` / `*.test.tsx`.
+
+---
+
+## Component subsystems
+
+```
+src/components/
+├── common/      — header.tsx, footer.tsx, not-found.tsx
+├── food-items/  — food_table.tsx
+├── profile/     — tab-nav, tab-panels, tab-button (SectionDivider), alert
+│                  forms: edit-email-form, change-password-form, personal-details-form,
+│                         create-food-item-form
+│                  list: food-items-list
+│                  local: types.ts, utils.ts
+├── ui/          — ShadCN: Button, Card, Input, Label, Badge, Dialog,
+│                          Field, Select, Separator, Table
+└── wrappers/    — page.tsx (PageWrapper)
+```
+
+---
+
+## Full route tree
+
+```
+/                               — dashboard
+/login                          — login form
+/signup                         — signup form
+/forgot_password                — password reset
+/auth/profile                   — protected: profile tabs
+/food_items/                    — all food items table + filters
+/food_items/$foodid             — single food item detail
+/food_items/category/           — all categories
+/food_items/category/$category  — foods by category
+/food_items/type/               — all types
+/food_items/type/$type          — foods by type
+```
+
+Routes under `/auth/` are protected by `_authed.tsx` layout — no manual auth checks needed inside them.
+
+---
+
+## Commit message format
+
+All commits use **Conventional Commits**. A `commit-msg` git hook enforces this locally.
+
+Format: `<type>(<scope>): <description>` — max 72 chars on subject line.
+
+Types: `feat` `fix` `refactor` `style` `test` `docs` `chore` `perf` `ci` `build` `revert`
+Scopes: `auth` `food` `profile` `daily-log` `db` `ui` `api` `config`
+
+```
+feat(food): add protein/carbs/fat fields to food creation form
+fix(auth): clear redis cache on session expiry
+chore(config): upgrade biome to v2.4.13
+```
+
+Always use this format when generating commit messages. Scope is optional but encouraged.
