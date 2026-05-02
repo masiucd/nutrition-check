@@ -1,0 +1,33 @@
+# <type>(<scope>): <short summary>   ← 72 chars max, imperative mood
+#
+# Types  (required):
+#   feat      New feature visible to users
+#   fix       Bug fix
+#   refactor  Code restructure with no behaviour change
+#   style     Formatting / whitespace / linting only
+#   test      Add or update tests
+#   docs      Documentation only
+#   chore     Maintenance (deps, config, tooling)
+#   perf      Performance improvement
+#   ci        CI/CD pipeline changes
+#   build     Build system changes (vite, tsconfig…)
+#   revert    Reverts a previous commit
+#
+# Scopes (optional, pick the most specific):
+#   auth        Authentication / session / login / signup
+#   food        Food items, DAOs, server functions
+#   profile     User profile / personal details
+#   daily-log   Daily log entries and totals
+#   db          Migrations, schema, DAOs
+#   ui          Components, styles, ShadCN
+#   api         Server functions / route handlers
+#   config      Env, biome, tsconfig, vite, docker
+#
+# Body (optional — leave a blank line after subject):
+#   Explain WHY, not HOW. Wrap at 72 chars.
+#
+# Examples:
+#   feat(food): add protein/carbs/fat fields to food form
+#   fix(auth): redirect to login when session expires
+#   chore(config): upgrade biome to v2.4.13
+#   refactor(db): extract category DAO to separate file
