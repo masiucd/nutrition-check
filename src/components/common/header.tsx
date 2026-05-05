@@ -55,7 +55,7 @@ function AuthenticatedNavLinks({user}: {user: ContextUser}) {
 						<div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 font-medium text-primary text-xs">
 							{initial}
 						</div>
-						<span>Profile</span>
+						<span className="sr-only">Profile</span>
 					</div>
 				</NavLink>
 			</li>

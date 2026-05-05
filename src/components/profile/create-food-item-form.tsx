@@ -8,30 +8,13 @@ import {CardContent, CardFooter} from "@/components/ui/card"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select"
+import {FOOD_CATEGORIES, FOOD_TYPES} from "@/lib/constants"
 import {type FoodCategoryName, type FoodTypeName, validate} from "@/lib/schemas"
 import {createFoodItem} from "@/server/functions/food"
 import {HttpStatusCode} from "@/server/utils/status_code"
 import {Alert} from "./alert"
 import {SectionDivider} from "./tab-button"
 import type {AlertState} from "./types"
-
-const FOOD_CATEGORIES = [
-	"Fruit",
-	"Vegetable",
-	"Meat",
-	"Dairy",
-	"Grains",
-	"Legumes",
-	"Nuts & Seeds",
-	"Snacks",
-	"Seafood",
-] as const satisfies readonly FoodCategoryName[]
-
-const FOOD_TYPES = [
-	"Whole Food",
-	"Semi-Processed",
-	"Processed",
-] as const satisfies readonly FoodTypeName[]
 
 function FieldError({errors, isTouched}: {errors: unknown[]; isTouched: boolean}) {
 	if (!isTouched || errors.length === 0) return null
@@ -152,7 +135,10 @@ export function CreateFoodItemForm() {
 									aria-invalid={field.state.meta.isTouched && field.state.meta.errors.length > 0}
 									required
 								/>
-								<FieldError errors={field.state.meta.errors} isTouched={field.state.meta.isTouched} />
+								<FieldError
+									errors={field.state.meta.errors}
+									isTouched={field.state.meta.isTouched}
+								/>
 							</div>
 						)}
 					</form.Field>
