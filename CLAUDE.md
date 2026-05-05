@@ -40,7 +40,8 @@ src/
 │   └── type.dao.server.ts        # typesByName, all
 ├── server/
 │   ├── functions/
-│   │   └── user.ts           # createUser, loginUser, logoutFn, getCurrentUserFn, updateUserEmailFn, updateUserPasswordFn
+│   │   ├── user.ts           # createUser, loginUser, logoutFn, getCurrentUserFn, updateUserEmailFn, updateUserPasswordFn
+│   │   └── food.ts           # food CRUD server functions
 │   └── utils/
 │       ├── password.server.ts  # hashPassword, comparePassword (bcryptjs)
 │       ├── redis.server.ts     # storeUserInCache, getUserFromCache, deleteUserFromCache
@@ -58,7 +59,7 @@ src/
 ├── components/
 │   └── ui/                   # ShadCN components: Button, Card, Input, Label
 ├── lib/
-│   ├── types.ts              # Nullable, Optional, Maybe, AwaitNullable, isNonNullable
+│   ├── types.ts              # Nullable, Optional, Maybe, Either, NonEmptyArray, AwaitNullable, NonNullableProps, isNonNullable
 │   └── utils.ts              # cn() (clsx + tailwind-merge)
 ├── env.ts                    # Zod-validated env schema (DB_*, JWT_*, SESSION_SECRET, REDIS_URL)
 ├── router.tsx                # TanStack Router config
@@ -290,15 +291,16 @@ Test files are co-located with source as `*.test.ts` / `*.test.tsx`.
 
 ```
 src/components/
-├── common/      — header.tsx, footer.tsx, not-found.tsx
+├── common/      — header.tsx, footer.tsx, not-found.tsx, page-skeleton.tsx
 ├── food-items/  — food_table.tsx
 ├── profile/     — tab-nav, tab-panels, tab-button (SectionDivider), alert
 │                  forms: edit-email-form, change-password-form, personal-details-form,
 │                         create-food-item-form
 │                  list: food-items-list
 │                  local: types.ts, utils.ts
+├── typography/  — typography.tsx
 ├── ui/          — ShadCN: Button, Card, Input, Label, Badge, Dialog,
-│                          Field, Select, Separator, Table
+│                          Field, Select, Separator, Skeleton, Table
 └── wrappers/    — page.tsx (PageWrapper)
 ```
 
