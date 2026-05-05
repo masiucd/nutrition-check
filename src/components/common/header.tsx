@@ -1,9 +1,10 @@
 import {Link, type LinkProps, useRouterState} from "@tanstack/react-router"
 import {useServerFn} from "@tanstack/react-start"
-import {Flame, LogOut, UserIcon} from "lucide-react"
+import {Flame, LogOut, Moon, Sun, UserIcon} from "lucide-react"
 import type {PropsWithChildren} from "react"
 import {Button} from "@/components/ui/button"
 import {appData} from "@/config"
+import {useTheme} from "@/hooks/use-theme"
 import type {ContextUser} from "@/lib/schemas"
 import {cn} from "@/lib/utils"
 import {logoutFn} from "@/server/functions/user"
@@ -21,11 +22,29 @@ export function Header(props: {user: ContextUser}) {
 						{appData.title}
 					</span>
 				</Link>
-				<nav>
-					<NavLinks user={props.user} />
-				</nav>
+				<div className="flex items-center gap-2">
+					<ThemeToggle />
+					<nav>
+						<NavLinks user={props.user} />
+					</nav>
+				</div>
 			</div>
 		</header>
+	)
+}
+
+function ThemeToggle() {
+	const {theme, toggleTheme} = useTheme()
+	return (
+		<Button
+			variant="ghost"
+			size="icon"
+			className="h-8 w-8 text-muted-foreground hover:text-foreground"
+			onClick={toggleTheme}
+			aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+		>
+			{theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+		</Button>
 	)
 }
 

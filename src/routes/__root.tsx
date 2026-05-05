@@ -44,8 +44,14 @@ function RootDocument({children}: PropsWithChildren) {
 	const {user} = Route.useRouteContext()
 
 	return (
-		<html lang="en">
+		<html lang="en" suppressHydrationWarning>
 			<head>
+				<script
+					// biome-ignore lint/security/noDangerouslySetInnerHtml: anti-FOUC theme init must run synchronously before first paint
+					dangerouslySetInnerHTML={{
+						__html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+					}}
+				/>
 				<HeadContent />
 			</head>
 			<body>
