@@ -9,6 +9,7 @@ import {
 	GetFoodItemsByCategorySchema,
 	GetFoodItemsByTypeSchema,
 	UpdateFoodItemSchema,
+	DeleteFoodItemSchema,
 } from "@/lib/schemas"
 import {getAppSession} from "@/server/utils/session"
 import {HttpStatusCode} from "@/server/utils/status_code"
@@ -142,6 +143,38 @@ export const createFoodItem = createServerFn({method: "POST"})
 			return {
 				data: null,
 				error: e instanceof Error ? e.message : "Failed to create food item",
+				status: HttpStatusCode.INTERNAL_SERVER_ERROR,
+			}
+		}
+	})
+
+export const deleteFoodItem = createServerFn({method: "POST"})
+	.inputValidator(DeleteFoodItemSchema)
+	.handler(async ({data}) => {
+		const session = await getAppSession()
+		const userId = session.data.userId
+
+		if (!userId) {
+			return {data: null, error: "Unauthenticated", status: HttpStatusCode.UNAUTHORIZED}
+		}
+
+		const existing = await foodsDao.findById(data.id)
+		if (!existing) {
+			return {data: null, error: "Food item not found", status: HttpStatusCode.NOT_FOUND}
+		}
+		if (existing.user_id !== userId) {
+			return {data: null, error: "Forbidden", status: HttpStatusCode.FORBIDDEN}
+		}
+
+		try {
+			await foodsDao.delete(data.id)
+			return {data: null, error: null, status: HttpStatusCode.OK}
+		} catch (e) {
+			// biome-ignore lint/suspicious/noConsole: <logging error>
+			console.error(e)
+			return {
+				data: null,
+				error: e instanceof Error ? e.message : "Failed to delete food item",
 				status: HttpStatusCode.INTERNAL_SERVER_ERROR,
 			}
 		}

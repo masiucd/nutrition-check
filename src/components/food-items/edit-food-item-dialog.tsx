@@ -40,20 +40,21 @@ function parseOptionalNumber(raw: string): number | undefined {
 
 interface Props {
 	item: FoodItem | null
-	open: boolean
 	onOpenChange: (open: boolean) => void
 }
 
-export function EditFoodItemDialog({item, open, onOpenChange}: Props) {
+export function EditFoodItemDialog({item, onOpenChange}: Props) {
 	if (!item) return null
-	return <EditDialogForm key={item.id} item={item} open={open} onOpenChange={onOpenChange} />
+	return <EditDialogForm key={item.id} item={item} onOpenChange={onOpenChange} />
 }
 
 function EditDialogForm({
 	item,
-	open,
 	onOpenChange,
-}: {item: FoodItem; open: boolean; onOpenChange: (open: boolean) => void}) {
+}: {
+	item: FoodItem
+	onOpenChange: (open: boolean) => void
+}) {
 	const [submitError, setSubmitError] = useState<string | null>(null)
 	const router = useRouter()
 	const updateFood = useServerFn(updateFoodItem)
@@ -102,7 +103,7 @@ function EditDialogForm({
 	})
 
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
+		<Dialog open onOpenChange={onOpenChange}>
 			<DialogContent className="sm:max-w-lg">
 				<DialogHeader>
 					<DialogTitle>Edit food item</DialogTitle>

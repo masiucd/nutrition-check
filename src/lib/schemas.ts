@@ -161,6 +161,8 @@ export const UpdateFoodItemSchema = CreateFoodItemSchema.extend({
 	id: z.number(),
 })
 
+export const DeleteFoodItemSchema = z.object({id: z.number()})
+
 export const GetFoodItemsByCategorySchema = z.object({category: z.string()})
 
 export const GetFoodItemsByTypeSchema = z.object({type: z.string()})

@@ -1,6 +1,7 @@
 import {Link} from "@tanstack/react-router"
 import {ArrowDown, ArrowUp, ArrowUpDown, Pen, Trash} from "lucide-react"
 import {useState} from "react"
+import {DeleteFoodItemDialog} from "@/components/food-items/delete-food-item-dialog"
 import {EditFoodItemDialog} from "@/components/food-items/edit-food-item-dialog"
 import {Badge, type BadgeProps} from "@/components/ui/badge"
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
@@ -70,6 +71,7 @@ function SortableHead({
 export function FoodTable({items, user, sortBy, sortDir, onSort}: Props) {
 	const isAuthenticated = user !== null
 	const [editItem, setEditItem] = useState<FoodItem | null>(null)
+	const [foodItemToDelete, setDeleteItem] = useState<FoodItem | null>(null)
 
 	return (
 		<>
@@ -175,7 +177,7 @@ export function FoodTable({items, user, sortBy, sortDir, onSort}: Props) {
 											<Button variant="secondary" size="sm" onClick={() => setEditItem(item)}>
 												<Pen size={20} />
 											</Button>
-											<Button variant="secondary" size="sm" disabled>
+											<Button variant="destructive" size="sm" onClick={() => setDeleteItem(item)}>
 												<Trash size={20} />
 											</Button>
 										</div>
@@ -188,9 +190,14 @@ export function FoodTable({items, user, sortBy, sortDir, onSort}: Props) {
 			</Table>
 			<EditFoodItemDialog
 				item={editItem}
-				open={editItem !== null}
 				onOpenChange={open => {
 					if (!open) setEditItem(null)
+				}}
+			/>
+			<DeleteFoodItemDialog
+				item={foodItemToDelete}
+				onOpenChange={open => {
+					if (!open) setDeleteItem(null)
 				}}
 			/>
 		</>
