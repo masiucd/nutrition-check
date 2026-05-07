@@ -157,6 +157,10 @@ export const CreateFoodItemSchema = z.object({
 	typeName: FoodTypeNameSchema.optional(),
 })
 
+export const UpdateFoodItemSchema = CreateFoodItemSchema.extend({
+	id: z.number(),
+})
+
 export const GetFoodItemsByCategorySchema = z.object({category: z.string()})
 
 export const GetFoodItemsByTypeSchema = z.object({type: z.string()})
@@ -198,6 +202,7 @@ export type FoodTypeName = z.infer<typeof FoodTypeNameSchema>
 export type FoodCategoryRow = z.infer<typeof FoodCategoryRowSchema>
 export type FoodTypeRow = z.infer<typeof FoodTypeRowSchema>
 export type CreateFoodItem = z.infer<typeof CreateFoodItemSchema>
+export type UpdateFoodItem = z.infer<typeof UpdateFoodItemSchema>
 
 // Special types
 // ─── Context user type ──────────────────────────────────────────────────────────

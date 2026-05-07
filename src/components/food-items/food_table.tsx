@@ -1,5 +1,7 @@
 import {Link} from "@tanstack/react-router"
 import {Pen, Trash} from "lucide-react"
+import {useState} from "react"
+import {EditFoodItemDialog} from "@/components/food-items/edit-food-item-dialog"
 import {Badge, type BadgeProps} from "@/components/ui/badge"
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
 import type {ContextUser, FoodCategoryName, FoodItem, FoodTypeName} from "@/lib/schemas"
@@ -12,7 +14,10 @@ interface Props {
 
 export function FoodTable({items, user}: Props) {
 	const isAuthenticated = user !== null
+	const [editItem, setEditItem] = useState<FoodItem | null>(null)
+
 	return (
+		<>
 		<Table>
 			<TableHeader>
 				<TableRow>
@@ -74,12 +79,16 @@ export function FoodTable({items, user}: Props) {
 							</TableCell>
 							<TableCell className="text-muted-foreground text-xs">{item.unit_label}</TableCell>
 							{isAuthenticated && user.id === item.user_id && (
-								<TableCell className="text-right font-semibold tabular-nums">
+								<TableCell>
 									<div className="flex gap-2">
-										<Button variant="secondary" size="sm" disabled={user.id !== item.user_id}>
+										<Button
+											variant="secondary"
+											size="sm"
+											onClick={() => setEditItem(item)}
+										>
 											<Pen size={20} />
 										</Button>
-										<Button variant="secondary" size="sm" disabled={user.id !== item.user_id}>
+										<Button variant="secondary" size="sm" disabled>
 											<Trash size={20} />
 										</Button>
 									</div>
@@ -90,6 +99,14 @@ export function FoodTable({items, user}: Props) {
 				)}
 			</TableBody>
 		</Table>
+		<EditFoodItemDialog
+			item={editItem}
+			open={editItem !== null}
+			onOpenChange={open => {
+				if (!open) setEditItem(null)
+			}}
+		/>
+		</>
 	)
 }
 

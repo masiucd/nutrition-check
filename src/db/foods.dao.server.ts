@@ -128,17 +128,47 @@ export const foodsDao = {
 		return rows[0]
 	},
 
-	/** Update a food's name, calorie value, and/or unit label. Returns the updated row. */
+	/** Update all editable fields of a food item. Returns the updated row. */
 	async update(
 		id: number,
-		fields: Partial<Pick<Food, "name" | "calories_per_unit" | "unit_label">>,
+		fields: {
+			name: string
+			caloriesPerUnit: number
+			proteinPerUnit: number
+			carbsPerUnit: number
+			fatPerUnit: number
+			unitLabel: string
+			categoryName: string | null
+			typeName: string | null
+		},
 	): Promise<Food> {
+		let categoryId: number | null = null
+		if (fields.categoryName) {
+			const cats = await sql<{id: number}[]>`
+				SELECT id FROM food_categories WHERE name = ${fields.categoryName}
+			`
+			categoryId = cats[0]?.id ?? null
+		}
+
+		let typeId: number | null = null
+		if (fields.typeName) {
+			const types = await sql<{id: number}[]>`
+				SELECT id FROM food_types WHERE name = ${fields.typeName}
+			`
+			typeId = types[0]?.id ?? null
+		}
+
 		const rows = await sql<Food[]>`
 			UPDATE foods
 			SET
-				name = COALESCE(${fields.name ?? null}, name),
-				calories_per_unit = COALESCE(${fields.calories_per_unit ?? null}, calories_per_unit),
-				unit_label = COALESCE(${fields.unit_label ?? null}, unit_label),
+				name = ${fields.name},
+				calories_per_unit = ${fields.caloriesPerUnit},
+				protein_per_unit = ${fields.proteinPerUnit},
+				carbs_per_unit = ${fields.carbsPerUnit},
+				fat_per_unit = ${fields.fatPerUnit},
+				unit_label = ${fields.unitLabel},
+				category_id = ${categoryId},
+				type_id = ${typeId},
 				updated_at = NOW()
 			WHERE id = ${id}
 			RETURNING *

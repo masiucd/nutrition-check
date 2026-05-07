@@ -8,6 +8,7 @@ import {
 	GetFoodItemSchema,
 	GetFoodItemsByCategorySchema,
 	GetFoodItemsByTypeSchema,
+	UpdateFoodItemSchema,
 } from "@/lib/schemas"
 import {getAppSession} from "@/server/utils/session"
 import {HttpStatusCode} from "@/server/utils/status_code"
@@ -69,6 +70,47 @@ export const getFoodItemsByType = createServerFn({method: "GET"})
 			return {data: parsedFoodTypes.data, error: null}
 		}
 		return {data: [], error: null}
+	})
+
+export const updateFoodItem = createServerFn({method: "POST"})
+	.inputValidator(UpdateFoodItemSchema)
+	.handler(async ({data}) => {
+		const session = await getAppSession()
+		const userId = session.data.userId
+
+		if (!userId) {
+			return {data: null, error: "Unauthenticated", status: HttpStatusCode.UNAUTHORIZED}
+		}
+
+		const existing = await foodsDao.findById(data.id)
+		if (!existing) {
+			return {data: null, error: "Food item not found", status: HttpStatusCode.NOT_FOUND}
+		}
+		if (existing.user_id !== userId) {
+			return {data: null, error: "Forbidden", status: HttpStatusCode.FORBIDDEN}
+		}
+
+		try {
+			const updated = await foodsDao.update(data.id, {
+				name: data.name,
+				caloriesPerUnit: data.caloriesPerUnit,
+				proteinPerUnit: data.proteinPerUnit ?? 0,
+				carbsPerUnit: data.carbsPerUnit ?? 0,
+				fatPerUnit: data.fatPerUnit ?? 0,
+				unitLabel: data.unitLabel ?? "serving",
+				categoryName: data.categoryName ?? null,
+				typeName: data.typeName ?? null,
+			})
+			return {data: updated, error: null, status: HttpStatusCode.OK}
+		} catch (e) {
+			// biome-ignore lint/suspicious/noConsole: <logging error>
+			console.error(e)
+			return {
+				data: null,
+				error: e instanceof Error ? e.message : "Failed to update food item",
+				status: HttpStatusCode.INTERNAL_SERVER_ERROR,
+			}
+		}
 	})
 
 export const createFoodItem = createServerFn({method: "POST"})
