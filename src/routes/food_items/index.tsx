@@ -1,7 +1,7 @@
 import {createFileRoute, useNavigate} from "@tanstack/react-router"
 import {FilterX} from "lucide-react"
 import {useMemo} from "react"
-import {FoodTable} from "@/components/food-items/food_table"
+import {FoodTable, type SortableColumn, type SortDir} from "@/components/food-items/food_table"
 import {NewFoodItemDialog} from "@/components/food-items/new-food-items-dialog"
 import {Heading, Text} from "@/components/typography"
 import {Button} from "@/components/ui/button"
@@ -11,10 +11,22 @@ import {FOOD_CATEGORIES, FOOD_TYPES} from "@/lib/constants"
 import type {FoodCategoryName, FoodTypeName} from "@/lib/schemas"
 import {getFoodItems} from "@/server/functions/food"
 
+const SORTABLE_COLUMNS: readonly SortableColumn[] = [
+	"food_name",
+	"food_category",
+	"food_type",
+	"calories_per_unit",
+	"protein_per_unit",
+	"carbs_per_unit",
+	"fat_per_unit",
+]
+
 type FoodItemsSearch = {
 	q?: string
 	types?: FoodTypeName[]
 	categories?: FoodCategoryName[]
+	sortBy?: SortableColumn
+	sortDir?: SortDir
 }
 
 // ---- Helpers ---------------------------------------------------------------
@@ -38,11 +50,20 @@ export const Route = createFileRoute("/food_items/")({
 		const q = typeof search.q === "string" ? search.q : undefined
 		const types = toValidArray(search.types, FOOD_TYPES)
 		const categories = toValidArray(search.categories, FOOD_CATEGORIES)
+		const sortBy =
+			typeof search.sortBy === "string" &&
+			SORTABLE_COLUMNS.includes(search.sortBy as SortableColumn)
+				? (search.sortBy as SortableColumn)
+				: undefined
+		const sortDir =
+			search.sortDir === "asc" || search.sortDir === "desc" ? search.sortDir : undefined
 
 		return {
 			...(q ? {q} : {}),
 			...(types.length > 0 ? {types} : {}),
 			...(categories.length > 0 ? {categories} : {}),
+			...(sortBy ? {sortBy} : {}),
+			...(sortDir ? {sortDir} : {}),
 		}
 	},
 	loader: async ({context}) => {
@@ -70,6 +91,8 @@ function useFoodFilters() {
 	const q = search.q ?? ""
 	const selectedTypes = search.types ?? []
 	const selectedCategories = search.categories ?? []
+	const sortBy = search.sortBy
+	const sortDir = search.sortDir ?? "asc"
 
 	const update = (next: Partial<FoodItemsSearch>) => {
 		navigate({
@@ -77,11 +100,15 @@ function useFoodFilters() {
 				const nextQ = next.q ?? prev.q ?? ""
 				const nextTypes = next.types ?? prev.types ?? []
 				const nextCategories = next.categories ?? prev.categories ?? []
+				const nextSortBy = "sortBy" in next ? next.sortBy : prev.sortBy
+				const nextSortDir = "sortDir" in next ? next.sortDir : prev.sortDir
 
 				return {
 					...(nextQ ? {q: nextQ} : {}),
 					...(nextTypes.length > 0 ? {types: nextTypes} : {}),
 					...(nextCategories.length > 0 ? {categories: nextCategories} : {}),
+					...(nextSortBy ? {sortBy: nextSortBy} : {}),
+					...(nextSortDir ? {sortDir: nextSortDir} : {}),
 				}
 			},
 			replace: true,
@@ -90,14 +117,30 @@ function useFoodFilters() {
 
 	const reset = () => navigate({search: () => ({}), replace: true})
 
+	const toggleSort = (column: SortableColumn) => {
+		if (sortBy === column) {
+			// Flip direction, or clear if already desc
+			if (sortDir === "desc") {
+				update({sortBy: undefined, sortDir: undefined})
+			} else {
+				update({sortBy: column, sortDir: "desc"})
+			}
+		} else {
+			update({sortBy: column, sortDir: "asc"})
+		}
+	}
+
 	return {
 		q,
 		selectedTypes,
 		selectedCategories,
+		sortBy,
+		sortDir,
 		onSearchChange: (value: string) => update({q: value}),
 		toggleType: (value: FoodTypeName) => update({types: toggle(selectedTypes, value)}),
 		toggleCategory: (value: FoodCategoryName) =>
 			update({categories: toggle(selectedCategories, value)}),
+		toggleSort,
 		reset,
 	}
 }
@@ -137,13 +180,23 @@ function FilterGroup<T extends string>({label, options, selected, onToggle}: Fil
 
 function RouteComponent() {
 	const {user, foodItems} = Route.useLoaderData()
-	const {q, selectedTypes, selectedCategories, onSearchChange, toggleType, toggleCategory, reset} =
-		useFoodFilters()
+	const {
+		q,
+		selectedTypes,
+		selectedCategories,
+		sortBy,
+		sortDir,
+		onSearchChange,
+		toggleType,
+		toggleCategory,
+		toggleSort,
+		reset,
+	} = useFoodFilters()
 
 	const filteredItems = useMemo(() => {
 		const text = q.trim().toLowerCase()
 
-		return foodItems.data.filter(item => {
+		const filtered = foodItems.data.filter(item => {
 			const matchesText = !text || item.food_name.toLowerCase().includes(text)
 			const matchesType =
 				!selectedTypes.length || selectedTypes.includes(item.food_type as FoodTypeName)
@@ -153,7 +206,19 @@ function RouteComponent() {
 
 			return matchesText && matchesType && matchesCategory
 		})
-	}, [foodItems.data, q, selectedTypes, selectedCategories])
+
+		if (!sortBy) return filtered
+
+		return [...filtered].sort((a, b) => {
+			const aVal = a[sortBy]
+			const bVal = b[sortBy]
+			const cmp =
+				typeof aVal === "number" && typeof bVal === "number"
+					? aVal - bVal
+					: String(aVal).localeCompare(String(bVal))
+			return sortDir === "desc" ? -cmp : cmp
+		})
+	}, [foodItems.data, q, selectedTypes, selectedCategories, sortBy, sortDir])
 
 	return (
 		<PageWrapper column className="items-start gap-6 py-8">
@@ -203,7 +268,13 @@ function RouteComponent() {
 					</div>
 				</div>
 
-				<FoodTable items={filteredItems} user={user} />
+				<FoodTable
+					items={filteredItems}
+					user={user}
+					sortBy={sortBy}
+					sortDir={sortDir}
+					onSort={toggleSort}
+				/>
 			</section>
 		</PageWrapper>
 	)
